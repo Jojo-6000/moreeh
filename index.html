@@ -72,6 +72,23 @@ button,input,select{font:inherit;color:inherit}
 .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}.flow .card{padding:12px 14px;font-size:12.5px}.flow b{display:block;font-size:13.5px}
 .callout{border-left:4px solid #5B2EFF;background:#F4F2FB;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.55;margin:10px 0}
 .callout.warn{border-color:#B3261E;background:#FDF0EE}
+.sh{font-size:16px;margin:26px 0 10px;letter-spacing:-.02em}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:1100px){.g2,.g3{grid-template-columns:1fr}}
+.hb{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}.hbl{width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb b{width:54px;text-align:right}
+.hbt{flex:1;height:10px;border-radius:5px;background:#ECE8FA;display:block;overflow:hidden}.hbt span{display:block;height:100%;border-radius:5px;background:#5B2EFF}
+.fn{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:13px}.fnl{width:190px}.fn b{width:60px;text-align:right}
+.rowl{cursor:pointer}.rowl:hover td{background:#F8F6FE}
+.act{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}.act>span:first-child{width:72px;font-size:12px;font-weight:700;color:#7A6FAE}.act .in{height:30px}
+.note{border-top:1px solid #F2EFFB;padding:8px 0;font-size:13px}
+.sup{display:flex;gap:14px;margin-top:16px;align-items:stretch;min-height:520px}
+.thl{width:300px;flex-shrink:0;padding:6px;max-height:calc(100vh - 150px);overflow:auto}
+.th{display:block;width:100%;text-align:left;border:0;background:none;border-radius:12px;padding:10px;cursor:pointer;font-size:12.5px;color:inherit}.th:hover{background:#F8F6FE}.th.on{background:#EEE9FF}
+.msgs{flex:1;display:flex;flex-direction:column;gap:10px;margin:14px 0;max-height:calc(100vh - 360px);min-height:200px;overflow:auto;padding-right:4px}
+.msg{max-width:80%;padding:10px 12px;border-radius:14px;font-size:13px}.msg.usr{background:#F4F2FB;align-self:flex-start}.msg.adm{background:#5B2EFF;color:#fff;align-self:flex-end}.msg.adm .ks{color:#D9D0FF}.msg.int{background:#FFF6DC;border:1px dashed #E0B341;align-self:flex-end}
+.kvl{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-top:8px}.kvl span{color:#7A6FAE}
+@media (max-width:1100px){.sup{flex-direction:column}.thl{width:auto;max-height:300px}.sup>.card[style*="width:260px"]{width:auto!important}}
+textarea.in{font-family:inherit}
 a{color:#5B2EFF}
 </style>
 </head>
@@ -140,7 +157,8 @@ function loadProjects() {
 function switchTo(id) {
   M.cur = id; M.dd = false; M.ov = M.coupons = M.audit = M.detail = null; M.created = null;
   try { localStorage.setItem("moreeh_cur", id); } catch (e) {}
-  if (["overview", "coupons", "audit"].indexOf(M.page) < 0) M.page = "overview";
+  if (["projects", "help"].indexOf(M.page) >= 0) M.page = "overview";
+  M.ins = M.users = M.usel = M.udata = M.saf = M.sup = M.thr = null; M.supUnread = 0;
   connect(proj()).then(function (ok) { if (ok) goPage(has(M.page) ? M.page : "overview"); });
 }
 
@@ -158,11 +176,11 @@ function vLogin(p) {
 }
 
 /* ---------- shell ---------- */
-var NAV = [["overview", "▦", "Overview"], ["coupons", "◆", "Coupons"], ["audit", "≡", "Audit log"], ["users", "◉", "Users", 1], ["safety", "⚑", "Safety review", 1], ["support", "✉", "Support", 1]];
+var NAV = [["overview", "▦", "Overview"], ["insights", "◔", "Insights"], ["users", "◉", "Users"], ["support", "✉", "Support"], ["safety", "⚑", "Safety review"], ["coupons", "◆", "Coupons"], ["audit", "≡", "Audit log"]];
 function shell(body) {
   var p = proj(), m = me() || {};
-  var nav = NAV.filter(function (x) { return x[3] ? p.home : has(x[0]); }).map(function (x) {
-    var badge = x[0] === "safety" && M.ov && M.ov.safety_holds ? "<i>" + M.ov.safety_holds + "</i>" : "";
+  var nav = NAV.filter(function (x) { return x[0] === "overview" || x[0] === "audit" || has(x[0]); }).map(function (x) {
+    var badge = x[0] === "safety" && M.ov && M.ov.safety_holds ? "<i>" + M.ov.safety_holds + "</i>" : x[0] === "support" && M.supUnread ? "<i>" + M.supUnread + "</i>" : "";
     return '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
   }).join("");
   var dd = M.dd ? '<div class="dd">' + M.projects.map(function (q) {
@@ -194,7 +212,7 @@ function vOverview() {
     var bars = pd.map(function (d, i) { var h = Math.max(2, d.value / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="26" height="' + h + '" rx="6" fill="' + (i === pd.length - 1 ? "#5B2EFF" : "#C9BEFF") + '"><title>' + esc(d.day) + ": " + d.value + '</title></rect><text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" + (d.value ? '<text x="' + (i * W + 13) + '" y="' + (H - h + 9) + '" font-size="10" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + d.value + "</text>" : ""); }).join("");
     chart = '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between"><b>' + esc(ch.title) + '</b><span class="ks">' + esc(ch.note || "") + '</span></div><svg width="100%" height="190" viewBox="0 0 ' + (pd.length * W) + ' 190" preserveAspectRatio="xMinYMid meet" role="img" aria-label="' + esc(ch.title) + '">' + bars + "</svg></div>";
   }
-  var alerts = (o.alerts || []).map(function (a) { return '<div class="card" style="margin-top:14px;border-left:4px solid ' + (a.tone === "bad" ? "#B3261E" : "#5B2EFF") + '"><b>' + esc(a.text) + '</b><div class="ks">' + esc(a.sub || "") + "</div></div>"; }).join("");
+  var alerts = (o.alerts || []).map(function (a) { var go = a.page && has(a.page); return "<" + (go ? 'button data-p="' + esc(a.page) + '"' : "div") + ' class="card' + (go ? " click" : "") + '" style="display:block;width:100%;margin-top:14px;border-left:4px solid ' + (a.tone === "bad" ? "#B3261E" : "#5B2EFF") + '"><b>' + esc(a.text) + '</b><div class="ks">' + esc(a.sub || "") + "</div>" + (go ? '<div class="more">Open →</div>' : "") + "</" + (go ? "button" : "div") + ">"; }).join("");
   var m = me() || {};
   return '<div style="display:flex;justify-content:space-between;align-items:center"><div><h1 class="h">Hello' + (m.email ? ", " + esc(m.email.split("@")[0]) : "") + '</h1><div class="sub">' + esc(p.name) + ' · last 7 days unless noted · click a box to see the list</div></div>' + (has("coupons") ? '<button class="b l" data-p="coupons">+ New coupon</button>' : "") + "</div>" +
     '<div class="kpis">' + cards + "</div>" + chart + alerts;
@@ -429,14 +447,253 @@ function csv() {
 }
 
 /* ---------- audit ---------- */
-var ACT = { "coupon.create": "Created coupon", "coupon.on": "Switched coupon on", "coupon.off": "Switched coupon off", "project.add": "Added project", "project.update": "Edited project", "project.remove": "Removed project" };
+var ACT = { "user.add_tickets": "Added tickets", "user.remove_tickets": "Removed tickets", "user.give_plus": "Gave J@rd Plus", "user.end_plus": "Ended J@rd Plus", "user.hold": "Paused checks", "user.unhold": "Lifted hold", "user.suspend": "Suspended account", "user.unsuspend": "Unsuspended account", "user.reset_login": "Sent password reset", "user.note": "Added note", "user.delete": "Deleted account",
+  "safety.clear": "Cleared safety hold", "safety.ask": "Asked user about a photo", "safety.suspend_report": "Suspended after safety review", "support.reply": "Replied to support", "support.note": "Internal support note", "support.status": "Changed support status", "coupon.create": "Created coupon", "coupon.on": "Switched coupon on", "coupon.off": "Switched coupon off", "project.add": "Added project", "project.update": "Edited project", "project.remove": "Removed project" };
 function vAudit() {
   var a = M.audit, myId = M.uid && M.uid[M.cur];
   return '<h1 class="h">Audit log</h1><div class="sub">Every admin action in ' + esc(proj().name) + ', newest first.</div><div class="card" style="margin-top:16px"><table class="tb"><tr><th>When</th><th>Who</th><th>What</th><th>Details</th></tr>' +
     (!a ? '<tr><td colspan="4" class="sub">Loading…</td></tr>' : !a.length ? '<tr><td colspan="4" class="sub">Nothing yet.</td></tr>' : a.map(function (x) {
       var d = x.detail || {};
-      return "<tr><td>" + when(x.created_at) + "</td><td>" + (x.admin_id && x.admin_id === myId ? "You" : esc(String(x.admin_id || "").slice(0, 8))) + "</td><td>" + esc(ACT[x.action] || x.action) + '</td><td class="ks">' + esc([d.name, d.campaign, d.codes ? d.codes + " code(s)" : "", d.tickets ? "+" + d.tickets + " ◆" : "", d.plus_days ? d.plus_days + " d Plus" : ""].filter(Boolean).join(" · ")) + "</td></tr>";
+      return "<tr><td>" + when(x.created_at) + "</td><td>" + (x.admin_id && x.admin_id === myId ? "You" : esc(String(x.admin_id || "").slice(0, 8))) + "</td><td>" + esc(ACT[x.action] || x.action) + '</td><td class="ks">' + esc([d.email, d.name, d.campaign, d.codes ? d.codes + " code(s)" : "", d.tickets ? "+" + d.tickets + " ◆" : "", d.n ? (d.n > 0 ? "+" : "") + d.n + " ◆" : "", d.plus_days ? d.plus_days + " d Plus" : "", d.days ? d.days + " d Plus" : "", d.status, d.reason, d.note].filter(Boolean).join(" · ")) + "</td></tr>";
     }).join("")) + "</table></div>";
+}
+
+/* ---------- shared bits for the ops pages ---------- */
+function role() { return (me() || {}).role || ""; }
+function isOwner() { return role() === "owner"; }
+function canManage() { return role() === "owner" || role() === "admin"; }
+function ago(iso) { if (!iso) return "—"; var s = (Date.now() - Date.parse(iso)) / 1000; if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + " min ago"; if (s < 86400) return Math.floor(s / 3600) + " h ago"; var d = Math.floor(s / 86400); return d === 1 ? "yesterday" : d < 30 ? d + " days ago" : day(iso); }
+function pct(a, b) { return b ? Math.round(a / b * 100) : 0; }
+function barChart(title, note, pd, color) {
+  if (!pd || !pd.length) return "";
+  var mx = Math.max.apply(null, pd.map(function (d) { return d.value; }).concat([1])), W = 40, H = 120;
+  var bars = pd.map(function (d, i) { var h = Math.max(2, d.value / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="26" height="' + h + '" rx="6" fill="' + (i === pd.length - 1 ? (color || "#5B2EFF") : "#C9BEFF") + '"><title>' + esc(d.day) + ": " + d.value + '</title></rect><text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" + (d.value ? '<text x="' + (i * W + 13) + '" y="' + (H - h + 9) + '" font-size="10" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + d.value + "</text>" : ""); }).join("");
+  return '<div class="card"><div style="display:flex;justify-content:space-between"><b>' + esc(title) + '</b><span class="ks">' + esc(note || "") + '</span></div><svg width="100%" height="160" viewBox="0 0 ' + (pd.length * W) + ' 160" preserveAspectRatio="xMinYMid meet" role="img" aria-label="' + esc(title) + '">' + bars + "</svg></div>";
+}
+function kcard(label, value, sub, tone) { return '<div class="card' + (tone ? " " + tone : "") + '"><div class="kl">' + esc(String(label).toUpperCase()) + '</div><div class="kv">' + value + '</div><div class="ks">' + esc(sub || "") + "</div></div>"; }
+function hbars(obj, total, fmt) {
+  var rows = Array.isArray(obj) ? obj.map(function (x) { return [x.name, x.n]; }) : Object.keys(obj || {}).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  if (!rows.length) return '<p class="ks">No data yet.</p>';
+  var mx = total || Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([1]));
+  return rows.map(function (r) { return '<div class="hb"><span class="hbl" title="' + esc(r[0]) + '">' + esc(r[0]) + '</span><span class="hbt"><span style="width:' + Math.max(2, r[1] / mx * 100) + '%"></span></span><b>' + (fmt ? fmt(r[1]) : n(r[1])) + "</b></div>"; }).join("");
+}
+function sec(title, sub) { return '<h2 class="sh">' + esc(title) + (sub ? ' <span class="ks" style="font-weight:600">' + esc(sub) + "</span>" : "") + "</h2>"; }
+
+/* ---------- insights ---------- */
+function vInsights() {
+  var d = M.ins, days = M.insDays || 30;
+  var head = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h1 class="h">Insights</h1><div class="sub">' + esc(proj().name) + ' · counts cover the last ' + days + ' days unless a box says otherwise</div></div><div class="seg">' +
+    [7, 30, 90].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="ins-days" data-v="' + x + '">' + x + " days</button>"; }).join("") + "</div></div>";
+  if (!d) return head + '<p class="sub">Loading…</p>';
+  var s = d.sales || {}, f = d.funnel || {}, e = d.engagement || {}, inv = d.inventory || {}, w = d.wishlist || {}, q = d.quality || {}, dv = d.devices || {};
+  var sticky = pct(e.dau, e.mau);
+  var steps = [["Signed up", f.signed_up], ["Did a first check", f.first_check], ["Used all 5 free tickets", f.used_all_free], ["Bought tickets or Plus", f.bought]];
+  var funnel = steps.map(function (st, i) {
+    var base = steps[0][1] || 0, prev = i ? steps[i - 1][1] : base;
+    return '<div class="fn"><span class="fnl">' + esc(st[0]) + '</span><span class="hbt" style="height:26px;border-radius:8px"><span style="width:' + (base ? Math.max(2, (st[1] || 0) / base * 100) : 2) + '%;border-radius:8px"></span></span><b>' + n(st[1]) + '</b><span class="ks" style="width:120px">' + (i ? pct(st[1], prev) + "% of the step before" : "") + "</span></div>";
+  }).join("");
+  var refundRate = pct(q.refunded, q.checks);
+  var vb = inv.value_by_currency || {}, val = Object.keys(vb).map(function (k) { return k + " " + n(vb[k]); }).join(" · ") || "—";
+  var vd = inv.verdicts || {};
+  return head +
+    sec("Sales & conversion") + '<div class="kpis">' +
+      kcard("Tickets sold", n(s.tickets_sold) + " ◆", n(s.orders) + " orders" + (s.test_orders ? " · " + n(s.test_orders) + " test (no payment)" : "")) +
+      kcard("J@rd Plus", n(s.plus_active), "active right now") +
+      kcard("Paying users", pct(f.bought, f.signed_up) + "%", n(f.bought) + " of " + n(f.signed_up) + " new sign-ups bought") +
+      kcard("Coupon tickets", n(s.coupon_tickets) + " ◆", n(f.coupon_users) + " users redeemed · " + n(f.coupon_then_bought) + " bought later") +
+      kcard("Refunded checks", n(s.refunds), "tickets given back when a check failed") + "</div>" +
+    (s.test_orders && s.test_orders === s.orders ? '<div class="callout" style="margin-top:12px">All orders so far are test top-ups (payments aren’t switched on yet), so sales numbers are for testing only.</div>' : "") +
+    sec("Free-ticket funnel", "new sign-ups in this period") + '<div class="card">' + funnel +
+      '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + "</b></div></div>" +
+    sec("Engagement & retention") + '<div class="kpis">' +
+      kcard("Daily active", n(e.dau), "last 24 hours") + kcard("Weekly active", n(e.wau), "last 7 days") + kcard("Monthly active", n(e.mau), "last 30 days") +
+      kcard("Stickiness", sticky + "%", "daily ÷ monthly active") + "</div>" +
+    '<div class="kpis">' +
+      kcard("Day 1 return", e.d1 == null ? "—" : e.d1 + "%", "came back a day after joining") + kcard("Day 7 return", e.d7 == null ? "—" : e.d7 + "%", "came back a week later") + kcard("Day 30 return", e.d30 == null ? "—" : e.d30 + "%", "came back a month later") +
+      kcard("Sessions", n(e.sessions), "avg " + (e.avg_session_mins == null ? "—" : e.avg_session_mins + " min") + " · median " + (e.median_session_mins == null ? "—" : e.median_session_mins + " min")) +
+      kcard("Checks per active user", e.checks_per_active == null ? "—" : e.checks_per_active, "in this period") + "</div>" +
+    '<div style="margin-top:14px">' + barChart("Active users per day", "last 14 days", e.per_day) + "</div>" +
+    '<div class="callout">Sessions are counted from build 19 of the app (it reports app version, phone model and language when opened; no location). Earlier activity is counted from checks only.</div>' +
+    sec("Inventory & wishlist") + '<div class="kpis">' +
+      kcard("Items in inventories", n(inv.items), n(inv.owners) + " users have items") + kcard("Value tracked", '<span style="font-size:18px">' + esc(val) + "</span>", "unsold items, middle of resale range") +
+      kcard("Acted on the verdict", (inv.acted_on == null ? "—" : inv.acted_on + "%"), "items with a logged outcome") +
+      kcard("Wishlist watches", n(w.watches), n(w.active) + " active · " + n(w.added) + " added · " + n(w.hits) + " price hits") + "</div>" +
+    '<div class="g2" style="margin-top:14px"><div class="card"><b>Top categories</b><div style="margin-top:10px">' + hbars(inv.categories) + '</div></div><div class="card"><b>Verdicts given</b><div style="margin-top:10px">' + hbars({ Fix: vd.fix || 0, Resell: vd.resell || 0, Keep: vd.keep || 0 }) + "</div></div></div>" +
+    '<div style="margin-top:14px">' + barChart("Wishlist watches added per day", "last 14 days", w.per_day, "#1A7F3C") + "</div>" +
+    sec("Quality & AI health") + '<div class="kpis">' +
+      kcard("Checks", n(q.checks), "quick + deep") + kcard("Failed and refunded", refundRate + "%", n(q.refunded) + " checks · " + n(q.deep_refunded) + " deep", refundRate > 10 ? "bad" : "") +
+      kcard("Watch failures", n(q.watch_failures), "price watches that errored", q.watch_failures ? "bad" : "") +
+      kcard("Refused photos", n(q.refused_photos), n(q.wrong_call_reports) + " reported as a wrong call") +
+      kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good") + "</div>" +
+    sec("Devices", "totals only, users seen in this period") + '<div class="g3"><div class="card"><b>App version</b><div style="margin-top:10px">' + hbars(dv.app_version) + '</div></div><div class="card"><b>Operating system</b><div style="margin-top:10px">' + hbars(dv.os) + '</div></div><div class="card"><b>App language</b><div style="margin-top:10px">' + hbars(dv.lang) + "</div></div></div>";
+}
+function loadInsights() { return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
+
+/* ---------- users ---------- */
+var UFILTERS = [["all", "All"], ["new", "New this week"], ["plus", "Plus"], ["hold", "On hold"], ["suspended", "Suspended"]];
+function ustatus(u) {
+  if (u.hold === "suspend" || (u.banned_until && Date.parse(u.banned_until) > Date.now())) return '<span class="tag off">Suspended</span>';
+  if (u.hold === "hold") return '<span class="tag" style="background:#FFE3B0;color:#7A4400">On hold</span>';
+  return '<span class="tag live">Active</span>';
+}
+function vUsers() {
+  if (M.usel) return vUser();
+  var list = M.users;
+  return '<h1 class="h">Users</h1><div class="sub">Search by email or user ID. Click a row to open the account.</div>' +
+    '<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><form id="f-uq" style="display:flex;gap:8px;flex:1;min-width:280px"><input class="in" id="u-q" placeholder="Email or user ID" value="' + esc(M.uq || "") + '"><button class="b p">Search</button></form><div class="seg">' +
+    UFILTERS.map(function (f) { return '<button class="b' + ((M.uf || "all") === f[0] ? " on" : "") + '" data-a="uf" data-v="' + f[0] + '">' + f[1] + "</button>"; }).join("") + "</div></div>" +
+    '<div class="card" style="margin-top:14px;overflow:auto"><table class="tb"><tr><th>Email</th><th>Plan</th><th style="text-align:right">Tickets</th><th style="text-align:right">Checks</th><th>Last seen</th><th>Joined</th><th>Status</th></tr>' +
+    (!list ? '<tr><td colspan="7" class="sub">Loading…</td></tr>' : !list.length ? '<tr><td colspan="7" class="sub">No users match.</td></tr>' : list.map(function (u) {
+      return '<tr class="rowl" data-a="open-user" data-id="' + esc(u.id) + '" tabindex="0"><td><b>' + esc(u.email || "(no email)") + "</b></td><td>" + (u.plan === "Plus" ? '<span class="tag" style="background:#EEE9FF;color:#5B2EFF">Plus</span>' : '<span class="ks">Free</span>') + '</td><td style="text-align:right">' + n(u.tickets) + '</td><td style="text-align:right">' + n(u.checks) + "</td><td>" + ago(u.last_seen || u.last_sign_in_at) + "</td><td>" + day(u.created_at) + "</td><td>" + ustatus(u) + "</td></tr>";
+    }).join("")) + "</table></div>" + (list && list.length >= 300 ? '<p class="ks">Showing the newest 300. Search to narrow it down.</p>' : "");
+}
+var REASON = { signup: "Welcome tickets", purchase: "Bought", subscription: "Plus tickets", check: "Check", refund: "Refund", demo: "Test top-up", adjust: "Admin change", watch: "Price watch", coupon: "Coupon" };
+function vUser() {
+  var d = M.udata;
+  var back = '<button class="b" data-a="close-user">← All users</button>';
+  if (!d) return back + '<p class="sub" style="margin-top:14px">Loading…</p>';
+  var u = d.user || {}, c = d.counts || {}, ls = d.last_session;
+  var openHold = (d.holds || []).filter(function (h) { return !h.lifted_at; });
+  var held = openHold.some(function (h) { return h.kind === "hold"; }), susp = openHold.some(function (h) { return h.kind === "suspend"; }) || (u.banned_until && Date.parse(u.banned_until) > Date.now());
+  var plus = u.plan === "plus" && u.plan_until && Date.parse(u.plan_until) > Date.now();
+  var a = M.uact || {};
+  var mg = canManage();
+  var actions = '<div class="card"><b>Actions</b>' +
+    (mg ? '<div class="act"><span>Tickets</span><input class="in" id="ua-n" type="number" min="-1000" max="1000" placeholder="e.g. 5 or -2" style="width:120px"><button class="b s p" data-a="ua" data-op="add_tickets">Apply</button></div>' +
+      '<div class="act"><span>J@rd Plus</span><input class="in" id="ua-days" type="number" min="1" max="365" value="30" style="width:80px"><span class="ks">days</span><button class="b s p" data-a="ua" data-op="give_plus">' + (plus ? "Extend" : "Give") + "</button>" + (plus ? '<button class="b s r" data-a="ua" data-op="end_plus">End Plus</button>' : "") + "</div>" +
+      '<label class="act" style="cursor:pointer"><input type="checkbox" id="ua-tell" checked> <span class="ks">Tell the user in the app when I add tickets or Plus</span></label>' +
+      '<div class="act"><span>Checks</span>' + (held ? '<button class="b s" data-a="ua" data-op="unhold">Lift hold</button>' : '<button class="b s" data-a="ua" data-op="hold">Pause checks (hold)</button>') +
+      (susp ? '<button class="b s" data-a="ua" data-op="unsuspend">Unsuspend</button>' : '<button class="b s r" data-a="ua" data-op="suspend">Suspend account</button>') + "</div>" : "") +
+    '<div class="act"><span>Sign-in</span><button class="b s" data-a="ua" data-op="reset_login">Send password reset email</button></div>' +
+    '<label class="lab" for="ua-reason">REASON (saved in the audit log; shown to the user only as the message when you tell them)</label><input class="in" id="ua-reason" maxlength="300" placeholder="e.g. Refund for a failed deep check">' +
+    (isOwner() && u.id !== (M.uid && M.uid[M.cur]) ? '<details style="margin-top:14px"><summary class="ks" style="cursor:pointer;color:#B3261E;font-weight:700">Delete this account</summary><p class="ks">Deletes the account, inventory, wishlist and photo backups for good. Type the email to confirm.</p><div style="display:flex;gap:8px"><input class="in" id="ua-del" placeholder="' + esc(u.email || "") + '"><button class="b r" data-a="ua" data-op="delete">Delete</button></div></details>' : "") +
+    (a.busy ? '<p class="ks">Working…</p>' : "") + "</div>";
+  var notes = '<div class="card"><b>Notes</b> <span class="ks">only admins see these</span><form id="f-note" style="display:flex;gap:8px;margin-top:10px"><input class="in" id="ua-note" maxlength="2000" placeholder="Add a note"><button class="b p">Add</button></form>' +
+    ((d.notes || []).length ? (d.notes || []).map(function (x) { return '<div class="note"><div>' + esc(x.note) + '</div><div class="ks">' + esc(x.by || "admin") + " · " + when(x.at) + "</div></div>"; }).join("") : '<p class="ks">No notes yet.</p>') + "</div>";
+  var ledger = '<div class="card"><b>Ticket history</b><table class="tb" style="margin-top:6px"><tr><th>When</th><th>What</th><th style="text-align:right">Change</th></tr>' +
+    ((d.ledger || []).length ? d.ledger.map(function (l) { return "<tr><td>" + when(l.at) + "</td><td>" + esc(REASON[l.reason] || l.reason) + (String(l.ref || "").indexOf("deep-") === 0 ? ' <span class="ks">deep</span>' : "") + '</td><td style="text-align:right;font-weight:700;color:' + (l.delta > 0 ? "#1A7F3C" : "#1A0B5C") + '">' + (l.delta > 0 ? "+" : "") + l.delta + "</td></tr>"; }).join("") : '<tr><td colspan="3" class="sub">None.</td></tr>') + "</table></div>";
+  var hist = '<div class="card"><b>Safety & holds</b>' +
+    ((d.safety || []).length || (d.holds || []).length ? '<table class="tb" style="margin-top:6px">' + (d.holds || []).map(function (h) { return "<tr><td>" + when(h.at) + "</td><td>" + (h.kind === "suspend" ? "Suspended" : "Hold") + '</td><td class="ks" style="white-space:normal">' + esc(h.reason || "") + "</td><td>" + (h.lifted_at ? '<span class="tag done">lifted ' + day(h.lifted_at) + "</span>" : '<span class="tag off">active</span>') + "</td></tr>"; }).join("") +
+      (d.safety || []).map(function (s) { return "<tr><td>" + when(s.at) + "</td><td>Refused photo</td><td>" + esc(s.reason) + '</td><td class="ks" style="white-space:normal">' + (s.reason === "minor" ? (s.reviewed_at ? "reviewed" : '<b style="color:#B3261E">needs review</b>') : "") + (s.note ? " · " + esc(s.note) : "") + "</td></tr>"; }).join("") + "</table>" : '<p class="ks">Nothing on record.</p>') + "</div>";
+  var threads = (d.threads || []).length ? '<div class="card"><b>Support requests</b>' + d.threads.map(function (t) { return '<div class="act"><button class="b s" data-a="open-thread" data-id="' + esc(t.id) + '">Open</button><span style="flex:1">' + esc(t.subject) + "</span>" + supTag(t.status) + '<span class="ks">' + ago(t.updated_at) + "</span></div>"; }).join("") + "</div>" : "";
+  return back + '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap"><h1 class="h">' + esc(u.email || "User") + "</h1>" + ustatus({ hold: susp ? "suspend" : held ? "hold" : null }) + (plus ? '<span class="tag" style="background:#EEE9FF;color:#5B2EFF">Plus until ' + day(u.plan_until) + "</span>" : "") + "</div>" +
+    '<div class="sub">' + esc([u.name, u.currency, u.lang, "joined " + day(u.created_at), "ID " + u.id].filter(Boolean).join(" · ")) + '</div>' +
+    '<div class="kpis">' + kcard("Tickets", n(d.tickets) + " ◆", "current balance") + kcard("Checks", n(c.checks), n(c.deep) + " deep") + kcard("Items", n(c.items), n(c.watches) + " on wishlist") + kcard("Sessions", n(c.sessions_30d), "last 30 days") +
+    kcard("Last seen", ls ? ago(ls.at) : ago(u.last_sign_in_at), ls ? [ls.device, ls.os, ls.app_version && "v" + ls.app_version].filter(Boolean).join(" · ") : "no app session yet") + "</div>" +
+    '<div class="g2" style="margin-top:14px;align-items:start"><div style="display:flex;flex-direction:column;gap:14px">' + actions + notes + threads + '</div><div style="display:flex;flex-direction:column;gap:14px">' + ledger + hist + "</div></div>";
+}
+function loadUsers() { M.users = null; render(); return api("users", { q: M.uq || "", filter: M.uf || "all" }).then(function (j) { M.users = j.users || []; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load users."); }); }
+function openUser(id) { M.page = "users"; M.usel = id; M.udata = null; M.uact = {}; render(); return api("user", { id: id }).then(function (j) { if (M.usel === id) { M.udata = j; render(); } }).catch(function (e) { authFail(e) || toast("Couldn’t load that user."); }); }
+var UERR = { not_allowed: "Your role can’t do that.", bad_amount: "Enter a number of tickets (use a minus sign to remove).", confirm_email: "The email you typed doesn’t match.", not_yourself: "You can’t delete your own account here.", reset_failed: "The reset email couldn’t be sent.", bad_note: "Write a note first." };
+var UOK = { add_tickets: "Tickets updated.", give_plus: "Plus updated.", end_plus: "Plus ended.", hold: "Checks paused for this user.", unhold: "Hold lifted.", suspend: "Account suspended. They’re signed out and can’t sign in.", unsuspend: "Account unsuspended.", reset_login: "Password reset email sent.", note: "Note added.", delete: "Account deleted." };
+function userAction(op) {
+  var u = (M.udata || {}).user; if (!u) return;
+  var v = function (id) { var e = $(id); return e ? e.value.trim() : ""; };
+  var body = { id: u.id, op: op, reason: v("ua-reason"), tell: !!($("ua-tell") && $("ua-tell").checked) };
+  if (op === "add_tickets") {
+    body.n = Number(v("ua-n"));
+    if (body.n < 0 && -body.n > Number(M.udata.tickets || 0)) { toast("They only have " + n(M.udata.tickets) + " tickets."); return; }
+  }
+  if (op === "give_plus") body.days = Number(v("ua-days"));
+  if (op === "note") body.note = v("ua-note");
+  if (op === "delete") { body.confirm = v("ua-del"); if (!confirm("Delete " + u.email + " for good? This can’t be undone.")) return; }
+  if (op === "suspend" && !confirm("Suspend " + u.email + "? They’ll be signed out and can’t sign in until you unsuspend them.")) return;
+  M.uact = { busy: true }; render();
+  api("user-action", body).then(function () {
+    toast(UOK[op] || "Done.");
+    if (op === "delete") { M.usel = null; M.udata = null; loadUsers(); return; }
+    openUser(u.id);
+  }).catch(function (e) { M.uact = {}; render(); toast(UERR[e && e.error] || "Couldn’t do that (" + ((e && e.error) || "error") + ")."); });
+}
+
+/* ---------- safety review ---------- */
+var SREASON = { minor: "Possible child safety", sexual: "Sexual content", person: "Person", animal: "Live animal", document: "ID / document", restricted: "Restricted item" };
+function vSafety() {
+  var d = M.saf;
+  var head = '<h1 class="h">Safety review</h1><div class="sub">Accounts paused after a photo was refused as possible child-safety content. J@rd never keeps refused photos, so decide from the account history.</div>';
+  if (!d) return head + '<p class="sub">Loading…</p>';
+  var mg = canManage(), counts = d.counts || {};
+  var holds = (d.holds || []).length ? d.holds.map(function (h) {
+    return '<div class="card" style="border-left:4px solid #B3261E"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:15px">' + esc(h.email || h.user_id) + '</b><span class="tag off">Checks paused</span><span class="ks">' + ago(h.at) + "</span>" +
+      '<button class="b s" style="margin-left:auto" data-a="open-user" data-id="' + esc(h.user_id) + '">Open account</button></div>' +
+      '<div class="ks" style="margin-top:6px">Joined ' + day(h.joined) + " · " + n(h.checks) + " checks · " + n(h.refusals) + " refused photos in total · " + (h.feedback ? '<b style="color:#1A7F3C">' + n(h.feedback) + " “wrong call” report" + (h.feedback > 1 ? "s" : "") + "</b> from the user" : "no wrong-call report from the user") + "</div>" +
+      (mg ? '<input class="in" id="sn-' + h.id + '" maxlength="500" placeholder="Note (optional, kept in the audit log)" style="margin-top:10px">' +
+        '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="b s l" data-a="sa" data-op="clear" data-id="' + h.id + '">Clear: AI mistake</button><button class="b s" data-a="sa" data-op="ask" data-id="' + h.id + '">Ask the user what it was</button><button class="b s r" data-a="sa" data-op="suspend_report" data-id="' + h.id + '">Suspend account</button></div>' : '<p class="ks">Only owners and admins can decide.</p>') + "</div>";
+  }).join("") : '<div class="card good"><b style="color:#1A7F3C">Nothing waiting.</b><div class="ks">No accounts are paused for review.</div></div>';
+  var chips = Object.keys(SREASON).map(function (k) { return '<span class="tag" style="background:#F4F2FB;color:#1A0B5C">' + esc(SREASON[k]) + " · " + n(counts[k] || 0) + "</span>"; }).join(" ");
+  var recent = '<table class="tb"><tr><th>When</th><th>User</th><th>Reason</th><th>User said wrong call</th><th>Review</th></tr>' + ((d.recent || []).length ? d.recent.map(function (r) {
+    return "<tr><td>" + when(r.at) + '</td><td><a href="#" data-a="open-user" data-id="' + esc(r.user_id) + '">' + esc(r.email || String(r.user_id).slice(0, 8)) + "</a></td><td>" + esc(SREASON[r.reason] || r.reason) + "</td><td>" + (r.wrong_call ? '<span class="tag live">yes</span>' : '<span class="ks">—</span>') + '</td><td class="ks" style="white-space:normal">' + (r.reviewed_at ? "Reviewed " + day(r.reviewed_at) : r.reason === "minor" ? '<b style="color:#B3261E">Waiting</b>' : "Not needed") + (r.note ? " · " + esc(r.note) : "") + "</td></tr>";
+  }).join("") : '<tr><td colspan="5" class="sub">No refused photos yet.</td></tr>') + "</table>";
+  return head + sec("Waiting for a decision", (d.holds || []).length ? (d.holds.length + " account" + (d.holds.length > 1 ? "s" : "")) : "") + '<div style="display:flex;flex-direction:column;gap:12px">' + holds + "</div>" +
+    '<div class="callout warn" style="margin-top:14px">Suspending signs the person out and blocks sign-in. It doesn’t report anything to anyone. If you believe a child is at risk, report it yourself to the police or your country’s child-protection hotline.</div>' +
+    sec("Refused photos, last 7 days", n(d.feedback_7d) + " wrong-call reports") + '<div style="display:flex;gap:6px;flex-wrap:wrap">' + chips + "</div>" +
+    '<div class="card" style="margin-top:12px;overflow:auto"><b>Latest 100</b>' + recent + "</div>";
+}
+function loadSafety() { return api("safety").then(function (j) { M.saf = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load safety review."); }); }
+function safetyAction(id, op) {
+  var note = ($("sn-" + id) || {}).value || "";
+  if (op === "suspend_report" && !confirm("Suspend this account? They’ll be signed out and can’t sign in.")) return;
+  api("safety-action", { id: Number(id), op: op, note: note }).then(function (j) {
+    toast(op === "clear" ? "Cleared. Their checks work again." : op === "ask" ? "Message sent. You’ll find it in Support." : "Account suspended.");
+    loadSafety(); loadOverview();
+  }).catch(function (e) { toast(e && e.error === "not_allowed" ? "Your role can’t do that." : "Couldn’t do that."); });
+}
+
+/* ---------- support ---------- */
+var STOPIC = { payments: "Payments & refunds", tickets: "Tickets", wrong_check: "Check got it wrong", account: "Account & sign-in", privacy: "Privacy & data", other: "Something else" };
+function supTag(st) { return st === "open" ? '<span class="tag" style="background:#FFE3B0;color:#7A4400">Needs reply</span>' : st === "waiting" ? '<span class="tag" style="background:#EEE9FF;color:#5B2EFF">Waiting for user</span>' : '<span class="tag done">Solved</span>'; }
+function vSupport() {
+  var s = M.sup || {}, d = s.data, st = s.status || "open", cnt = (d && d.counts) || {};
+  var tabs = [["open", "Needs reply"], ["waiting", "Waiting for user"], ["solved", "Solved"], ["all", "All"]].map(function (t) {
+    var c = t[0] === "all" ? "" : " " + n(cnt[t[0]] || 0);
+    return '<button class="b' + (st === t[0] ? " on" : "") + '" data-a="sup-tab" data-v="' + t[0] + '">' + t[1] + c + "</button>";
+  }).join("");
+  var list = !d ? '<p class="sub">Loading…</p>' : !(d.threads || []).length ? '<p class="ks" style="padding:8px">Nothing here.</p>' : d.threads.map(function (t) {
+    var on = M.thr && M.thr.id === t.id;
+    return '<button class="th' + (on ? " on" : "") + '" data-a="open-thread" data-id="' + esc(t.id) + '"><div style="display:flex;gap:6px;align-items:center">' + (t.admin_unread ? '<span class="pdot" style="background:#5B2EFF"></span>' : "") + '<b style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.email || "user") + '</b><span class="ks">' + ago(t.updated_at) + "</span></div>" +
+      '<div style="font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.subject || STOPIC[t.topic]) + '</div><div class="ks" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(STOPIC[t.topic] || t.topic) + " · " + esc(t.last || "") + "</div></button>";
+  }).join("");
+  return '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h1 class="h">Support</h1><div class="sub">Messages from Help &amp; support in the app. Replies show up in the user’s app with a notification.</div></div><div class="seg">' + tabs + "</div></div>" +
+    '<div class="sup"><div class="card thl">' + list + "</div>" + vThread() + "</div>";
+}
+function vThread() {
+  var t = M.thr;
+  if (!t) return '<div class="card" style="flex:1"><p class="sub">Pick a conversation on the left.</p></div>';
+  if (!t.data) return '<div class="card" style="flex:1"><p class="sub">Loading…</p></div>';
+  var th = t.data.thread || {}, u = t.data.user || {}, meta = th.meta || {};
+  var msgs = (t.data.messages || []).map(function (m) {
+    var me2 = m.sender === "admin";
+    return '<div class="msg ' + (m.internal ? "int" : me2 ? "adm" : "usr") + '"><div class="ks" style="font-weight:700;margin-bottom:3px">' + (m.internal ? "Internal note · " + esc(m.admin_name || "") : me2 ? esc(m.admin_name || "J@rd") + " · J@rd support" : esc(u.email || "User")) + " · " + when(m.at) + '</div><div style="white-space:pre-wrap;word-wrap:break-word;line-height:1.5">' + esc(m.body) + "</div></div>";
+  }).join("");
+  var metaLine = [meta.device, meta.os, meta.app_version && "v" + meta.app_version, meta.lang].filter(Boolean).join(" · ");
+  var conv = '<div class="card" style="flex:1;min-width:0;display:flex;flex-direction:column"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:15px;flex:1">' + esc(th.subject || "Conversation") + "</b>" + supTag(th.status) +
+    (th.status === "solved" ? '<button class="b s" data-a="sup-status" data-v="open">Reopen</button>' : '<button class="b s" data-a="sup-status" data-v="solved">Mark solved</button>') + "</div>" +
+    '<div class="ks">' + esc(STOPIC[th.topic] || th.topic) + " · started " + when(th.created_at) + (metaLine ? " · " + esc(metaLine) : "") + "</div>" +
+    '<div class="msgs">' + msgs + "</div>" +
+    '<form id="f-reply"><textarea class="in" id="r-body" rows="4" maxlength="4000" placeholder="Write a reply" style="height:auto;padding:10px 12px;resize:vertical">' + esc(t.draft || "") + "</textarea>" +
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><label class="ks" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="r-int"> Internal note (the user won’t see it)</label><span style="flex:1"></span>' +
+    '<button type="submit" class="b p" data-v="waiting"' + (t.busy ? " disabled" : "") + '>Send</button><button type="submit" class="b" data-v="solved"' + (t.busy ? " disabled" : "") + ">Send &amp; mark solved</button></div></form></div>";
+  var side = '<div class="card" style="width:260px;flex-shrink:0;align-self:flex-start"><b>' + esc(u.name || "User") + '</b><div class="ks" style="word-break:break-all">' + esc(u.email || "") + "</div>" +
+    '<div class="kvl"><span>Plan</span><b>' + esc(u.plan || "Free") + (u.plan === "Plus" ? " until " + day(u.plan_until) : "") + '</b></div><div class="kvl"><span>Tickets</span><b>' + n(u.tickets) + ' ◆</b></div><div class="kvl"><span>Checks</span><b>' + n(u.checks) + '</b></div><div class="kvl"><span>Joined</span><b>' + day(u.created_at) + "</b></div>" +
+    '<div class="kl" style="margin-top:12px">RECENT TOP-UPS & GIFTS</div>' + ((u.purchases || []).length ? u.purchases.map(function (p) { return '<div class="kvl"><span>' + esc(REASON[p.reason] || p.reason) + " · " + day(p.at) + "</span><b>" + (p.delta > 0 ? "+" : "") + p.delta + "</b></div>"; }).join("") : '<div class="ks">None.</div>') +
+    (u.id ? '<button class="b s" style="margin-top:12px;width:100%" data-a="open-user" data-id="' + esc(u.id) + '">Open account</button>' : "") + "</div>";
+  return conv + side;
+}
+function loadSupport() { var st = (M.sup && M.sup.status) || "open"; return api("support", { status: st }).then(function (j) { M.sup = { status: st, data: j }; M.supUnread = (j.counts || {}).unread || 0; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load support."); }); }
+function openThread(id) {
+  if (M.page !== "support") { M.page = "support"; M.usel = null; if (!M.sup) loadSupport(); }
+  M.thr = { id: id }; render();
+  return api("thread", { id: id }).then(function (j) { if (M.thr && M.thr.id === id) { M.thr.data = j; render(); var b = document.querySelector(".msgs"); if (b) b.scrollTop = b.scrollHeight; loadSupport(); } }).catch(function () { toast("Couldn’t open that conversation."); });
+}
+function sendReply(status, only) {
+  var t = M.thr; if (!t) return;
+  var body = only ? "" : (($("r-body") || {}).value || "").trim(), internal = !only && !!($("r-int") && $("r-int").checked);
+  if (!body && !status) return;
+  if (!body && status !== "solved" && status !== "open") { toast("Write a reply first."); return; }
+  var keep = (($("r-body") || {}).value || ""); t.busy = true; t.draft = keep; render();
+  api("support-reply", { id: t.id, body: body, internal: internal, status: internal ? null : status }).then(function () {
+    t.busy = false; t.draft = only ? keep : ""; toast(!body ? (status === "solved" ? "Marked solved." : "Reopened.") : internal ? "Note saved." : "Reply sent."); openThread(t.id);
+  }).catch(function (e) { t.busy = false; render(); toast(e && e.error === "bad_body" ? "Write a reply first." : "Couldn’t send."); });
 }
 
 /* ---------- render & loading ---------- */
@@ -450,18 +707,18 @@ function render() {
   else if (!c || c.state === "checking") body = '<p class="sub">Connecting to ' + esc(p.name) + "…</p>";
   else if (c.state === "signin") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:520px"><b>Sign in to this project</b><p class="ks">Each app has its own admin login.</p><button class="b p" data-a="signin" data-id="' + esc(p.id) + '">Sign in to ' + esc(p.name) + "</button></div>";
   else if (c.state === "error") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:620px;border-left:4px solid #B3261E"><b>' + esc(CONN_TXT[c.code] || c.code) + '</b><p class="ks">See <a href="#" data-p="help" data-sec="trouble">Troubleshooting</a>.</p><div style="display:flex;gap:8px"><button class="b" data-a="test" data-id="' + esc(p.id) + '">Try again</button><button class="b" data-a="signin" data-id="' + esc(p.id) + '">Sign in with another account</button></div></div>';
-  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : vOverview();
+  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : M.page === "insights" && has("insights") ? vInsights() : M.page === "users" && has("users") ? vUsers() : M.page === "safety" && has("safety") ? vSafety() : M.page === "support" && has("support") ? vSupport() : vOverview();
   r.innerHTML = shell(body);
   if (M.focus) { var f = $(M.focus); if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} } M.focus = null; }
 }
-function loadOverview() { return api("overview").then(function (j) { M.ov = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load the overview."); }); }
+function loadOverview() { if (has("support")) api("support", { status: "open" }).then(function (j) { M.supUnread = (j.counts || {}).unread || 0; render(); }).catch(function () {}); return api("overview").then(function (j) { M.ov = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load the overview."); }); }
 function loadCoupons() { return api("coupons").then(function (j) { M.coupons = j.coupons; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load coupons."); }); }
 function loadAudit() { return api("audit").then(function (j) { M.audit = j.audit; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load the audit log."); }); }
 function authFail(e) { if (e && (e.error === "unauthorized" || e.error === "signed_out")) { M.conn[M.cur] = { state: "signin" }; render(); return true; } return false; }
 function goPage(p, sec) {
   M.page = p; M.err = ""; M.dd = false; render();
   var c = M.conn[M.cur];
-  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); }
+  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
   if (p === "projects") M.projects.forEach(function (q) { if (!M.conn[q.id]) connect(q); });
   if (p === "help" && sec) setTimeout(function () { var el = $("h-" + sec); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 30);
 }
@@ -494,13 +751,16 @@ document.addEventListener("submit", function (e) {
     });
   }
   if (f.id === "f-coupon") createCoupon();
+  if (f.id === "f-uq") { M.uq = ($("u-q") || {}).value || ""; loadUsers(); }
+  if (f.id === "f-note") userAction("note");
+  if (f.id === "f-reply") sendReply((e.submitter && e.submitter.dataset.v) || "waiting");
   if (f.id === "f-proj") saveProject();
 });
 document.addEventListener("input", function (e) {
   if (e.target.id === "d-q" && M.detail) { M.detail.q = e.target.value; M.focus = "d-q"; render(); }
   if (e.target.id === "p-url" && M.pform) { var u = e.target.value.trim().replace(/\/+$/, ""); var api$ = $("p-api"); if (api$ && (!api$.value || /\/functions\/v1\/moreeh$/.test(api$.value))) api$.value = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(u) ? u + "/functions/v1/moreeh" : api$.value; }
 });
-document.addEventListener("keydown", function (e) { if (e.key === "Escape" && M.detail) { M.detail = null; render(); } if (e.key === "Escape" && M.dd) { M.dd = false; render(); } });
+document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("rowl")) { openUser(e.target.dataset.id); return; } if (e.key === "Escape" && M.detail) { M.detail = null; render(); } if (e.key === "Escape" && M.dd) { M.dd = false; render(); } });
 document.addEventListener("click", function (e) {
   if (e.target.closest("[data-stop]") && !e.target.closest("[data-a],[data-p]")) return;
   var t = e.target.closest("[data-p],[data-a]"); if (!t) { if (M.dd) { M.dd = false; render(); } return; }
@@ -528,6 +788,15 @@ document.addEventListener("click", function (e) {
   if (a === "copy-pre") { var txt = t.parentNode.textContent.replace(/^Copy/, ""); if (navigator.clipboard) navigator.clipboard.writeText(txt); toast("Copied."); }
   if (a === "logout") { e.preventDefault(); client().auth.signOut().then(function () { if (M.cur === "home") { M.conn = {}; } else { M.conn[M.cur] = { state: "signin" }; } render(); }); }
   if (a === "kind") { readForm(); M.form.kind = t.dataset.k; render(); }
+  if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; render(); loadInsights(); }
+  if (a === "uf") { M.uf = t.dataset.v; M.uq = ($("u-q") || {}).value || M.uq || ""; loadUsers(); }
+  if (a === "open-user") { e.preventDefault(); M.detail = null; openUser(t.dataset.id); }
+  if (a === "close-user") { M.usel = null; M.udata = null; if (!M.users) loadUsers(); else render(); }
+  if (a === "ua") userAction(t.dataset.op);
+  if (a === "sa") safetyAction(t.dataset.id, t.dataset.op);
+  if (a === "sup-tab") { M.sup = { status: t.dataset.v }; render(); loadSupport(); }
+  if (a === "open-thread") openThread(t.dataset.id);
+  if (a === "sup-status") { if (M.thr) { var dr = $("r-body"); M.thr.draft = dr ? dr.value : ""; } sendReply(t.dataset.v, true); }
   if (a === "new") { M.created = null; render(); }
   if (a === "csv") csv();
   if (a === "copy") { navigator.clipboard && navigator.clipboard.writeText(M.created.codes[0]); toast("Copied " + M.created.codes[0]); }
