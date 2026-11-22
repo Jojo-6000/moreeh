@@ -77,7 +77,7 @@ button,input,select{font:inherit;color:inherit}
 .sh{font-size:16px;margin:26px 0 10px;letter-spacing:-.02em}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 @media (max-width:1100px){.g2,.g3{grid-template-columns:1fr}}
-.hb{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}.hbl{width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb b{width:54px;text-align:right}
+.hb{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:12.5px}.hbl{width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb b{min-width:54px;text-align:right;flex-shrink:0}.hbt{flex:1;min-width:40px}
 .hbt{flex:1;height:10px;border-radius:5px;background:#ECE8FA;display:block;overflow:hidden}.hbt span{display:block;height:100%;border-radius:5px;background:#5B2EFF}
 .fn{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:13px}.fnl{width:190px}.fn b{width:60px;text-align:right}
 .rowl{cursor:pointer}.rowl:hover td{background:#F8F6FE}
@@ -94,6 +94,37 @@ textarea.in{font-family:inherit}
 .mtr{height:10px;border-radius:5px;background:#ECE8FA;margin-top:8px;overflow:hidden}.mtr span{display:block;height:100%;border-radius:5px}
 .card.warn{border-left:4px solid #FF8A00}
 a{color:#5B2EFF}
+.navg{display:flex;align-items:center;border-radius:12px}.navg .nav{flex:1}.navg.on{background:#5B2EFF}.navg.on .nav.on{background:none}
+.navt{width:30px;height:30px;margin-right:5px;border:0;border-radius:9px;background:none;color:#C9BEFF;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800}
+.navt:hover{background:rgba(255,255,255,.1)}.navt span{display:inline-block;transition:transform .2s}
+.navsub{display:grid;grid-template-rows:0fr;transition:grid-template-rows .25s ease}.navsub>div{overflow:hidden;display:flex;flex-direction:column;gap:2px}.navsub.open{grid-template-rows:1fr}
+@media (prefers-reduced-motion:reduce){.navsub,.navt span{transition:none}}
+.side{overflow-y:auto}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media (max-width:1100px){.g4{grid-template-columns:1fr 1fr}}
+.g4 .card .kv{font-size:22px}
+.fc{display:flex;flex-direction:column;gap:6px}.fch{display:flex;align-items:center;gap:8px}.fch b{flex:1}.fch .ks{margin:0}
+.flg{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#7A6FAE;margin:4px 0}.flg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.bva{height:10px;border-radius:5px;background:#F4F2FB;margin-top:4px;overflow:hidden}.bva span{display:block;height:100%;border-radius:5px}
+.mload{display:flex;gap:8px;align-items:flex-end;height:46px;margin:30px 0 0 4px}.mload span{width:12px;border-radius:4px;background:#5B2EFF;animation:mlb 1s ease-in-out infinite}
+.mload span:nth-child(2){animation-delay:.15s;background:#9C7BFF}.mload span:nth-child(3){animation-delay:.3s;background:#D4FF3A}
+@keyframes mlb{0%,100%{height:12px}50%{height:44px}}
+.boot{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1A0B5C;color:#fff;gap:22px;overflow:hidden;position:relative}
+.boot .glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,rgba(91,46,255,.55),transparent 65%);animation:bglow 3.2s ease-in-out infinite}
+@keyframes bglow{0%,100%{transform:scale(.85);opacity:.7}50%{transform:scale(1.08);opacity:1}}
+.boot .logo{position:relative;width:84px;height:84px;border-radius:24px;background:#D4FF3A;color:#1A0B5C;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:42px;letter-spacing:-.04em;animation:bpop .7s cubic-bezier(.34,1.56,.64,1) both}
+.boot .logo::after{content:"";position:absolute;inset:-9px;border-radius:30px;border:2px solid rgba(212,255,58,.55);animation:bring 1.8s ease-out .5s infinite}
+@keyframes bpop{from{transform:scale(.4) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes bring{0%{transform:scale(.92);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.boot .chart{position:relative;display:flex;align-items:flex-end;gap:7px;height:52px}
+.boot .chart span{width:10px;border-radius:4px;background:#5B2EFF;transform-origin:bottom;animation:bbar 1.4s cubic-bezier(.4,0,.2,1) infinite}
+.boot .chart span:nth-child(1){height:22px;animation-delay:.05s}.boot .chart span:nth-child(2){height:36px;animation-delay:.15s;background:#7C5CFF}.boot .chart span:nth-child(3){height:28px;animation-delay:.25s;background:#9C7BFF}.boot .chart span:nth-child(4){height:46px;animation-delay:.35s;background:#C9BEFF}.boot .chart span:nth-child(5){height:52px;animation-delay:.45s;background:#D4FF3A}
+@keyframes bbar{0%{transform:scaleY(.15)}45%{transform:scaleY(1)}75%,100%{transform:scaleY(.15)}}
+.boot .wm{position:relative;font-weight:800;font-size:22px;letter-spacing:-.02em}.boot .wm b{color:#D4FF3A}
+.boot .st{position:relative;font-size:12.5px;color:#C9BEFF;background:linear-gradient(90deg,#C9BEFF 0%,#fff 50%,#C9BEFF 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:bshim 1.8s linear infinite}
+@keyframes bshim{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.boot *,.boot .logo::after,.mload span{animation:none!important}}
+.connl{display:flex;align-items:center;gap:14px;margin-top:40px}.connl .mload{margin:0;height:34px}.connl .mload span{width:9px;animation-name:mlb2}
+@keyframes mlb2{0%,100%{height:9px}50%{height:32px}}
 </style>
 </head>
 <body>
@@ -180,13 +211,21 @@ function vLogin(p) {
 }
 
 /* ---------- shell ---------- */
-var NAV = [["overview", "▦", "Overview"], ["insights", "◔", "Insights"], ["users", "◉", "Users"], ["support", "✉", "Support"], ["safety", "⚑", "Safety review"], ["coupons", "◆", "Coupons"], ["audit", "≡", "Audit log"]];
+var NAV = [["overview", "▦", "Overview"], ["insights", "◔", "Insights"], ["finance", "¤", "Finance"], ["users", "◉", "Users"], ["support", "✉", "Support"], ["safety", "⚑", "Safety review"], ["coupons", "◆", "Coupons"], ["audit", "≡", "Audit log"]];
 function shell(body) {
   var p = proj(), m = me() || {};
-  var nav = NAV.filter(function (x) { return x[0] === "overview" || x[0] === "audit" || has(x[0]); }).map(function (x) {
+  var nav = NAV.filter(function (x) { return x[0] === "overview" || x[0] === "audit" || (has(x[0]) && !(x[0] === "finance" && role() === "support")); }).map(function (x) {
     var badge = x[0] === "safety" && M.ov && M.ov.safety_holds ? "<i>" + M.ov.safety_holds + "</i>" : x[0] === "support" && M.supUnread ? "<i>" + M.supUnread + "</i>" : "";
-    var main = '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
-    if (x[0] === "insights") main += INS.filter(function (s) { return s[0] !== "ai" || has("ai_usage"); }).map(function (s) { return '<button class="nav sub' + (M.page === "ins:" + s[0] ? " on" : "") + '" data-p="ins:' + s[0] + '">' + esc(s[1]) + "</button>"; }).join("");
+    var grp = x[0] === "insights" || x[0] === "finance", target = x[0] === "finance" ? "fin" : x[0];
+    var inGrp = x[0] === "insights" ? /^ins/.test(M.page) : x[0] === "finance" ? /^fin/.test(M.page) : false;
+    M.navOpen = M.navOpen || {}; if (M.navOpen[x[0]] == null) M.navOpen[x[0]] = inGrp;
+    var open = M.navOpen[x[0]], onTop = M.page === target;
+    var main = grp ? '<div class="navg' + (onTop ? " on" : "") + '"><button class="nav' + (onTop ? " on" : "") + '" data-p="' + target + '"><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + '</button><button class="navt" data-a="nav-tog" data-v="' + x[0] + '" aria-expanded="' + open + '" aria-label="' + (open ? "Collapse " : "Expand ") + x[2] + '"><span style="transform:rotate(' + (open ? 90 : 0) + 'deg)">›</span></button></div>'
+      : '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
+    var subs = "";
+    if (x[0] === "insights") subs = INS.filter(function (s) { return s[0] !== "ai" || has("ai_usage"); }).map(function (s) { return '<button class="nav sub' + (M.page === "ins:" + s[0] ? " on" : "") + '" data-p="ins:' + s[0] + '">' + esc(s[1]) + "</button>"; }).join("");
+    if (x[0] === "finance") subs = FIN.filter(function (s) { return s[0] !== "fin"; }).map(function (s) { return '<button class="nav sub' + (M.page === s[0] ? " on" : "") + '" data-p="' + s[0] + '">' + esc(FIN_NAV[s[0]]) + "</button>"; }).join("");
+    if (grp) main += '<div class="navsub' + (open ? " open" : "") + '"><div>' + subs + "</div></div>";
     return main;
   }).join("");
   var dd = M.dd ? '<div class="dd">' + M.projects.map(function (q) {
@@ -453,7 +492,7 @@ function csv() {
 }
 
 /* ---------- audit ---------- */
-var ACT = { "ai.settings": "Changed AI budgets / ticket price", "user.add_tickets": "Added tickets", "user.remove_tickets": "Removed tickets", "user.give_plus": "Gave J@rd Plus", "user.end_plus": "Ended J@rd Plus", "user.hold": "Paused checks", "user.unhold": "Lifted hold", "user.suspend": "Suspended account", "user.unsuspend": "Unsuspended account", "user.reset_login": "Sent password reset", "user.note": "Added note", "user.delete": "Deleted account",
+var ACT = { "ai.settings": "Changed AI budgets / ticket price", "finance.settings": "Changed finance settings", "user.add_tickets": "Added tickets", "user.remove_tickets": "Removed tickets", "user.give_plus": "Gave J@rd Plus", "user.end_plus": "Ended J@rd Plus", "user.hold": "Paused checks", "user.unhold": "Lifted hold", "user.suspend": "Suspended account", "user.unsuspend": "Unsuspended account", "user.reset_login": "Sent password reset", "user.note": "Added note", "user.delete": "Deleted account",
   "safety.clear": "Cleared safety hold", "safety.ask": "Asked user about a photo", "safety.suspend_report": "Suspended after safety review", "support.reply": "Replied to support", "support.note": "Internal support note", "support.status": "Changed support status", "coupon.create": "Created coupon", "coupon.on": "Switched coupon on", "coupon.off": "Switched coupon off", "project.add": "Added project", "project.update": "Edited project", "project.remove": "Removed project" };
 function vAudit() {
   var a = M.audit, myId = M.uid && M.uid[M.cur];
@@ -823,18 +862,212 @@ function sendReply(status, only) {
   }).catch(function (e) { t.busy = false; render(); toast(e && e.error === "bad_body" ? "Write a reply first." : "Couldn’t send."); });
 }
 
+/* ---------- finance ---------- */
+var FIN = [["fin", "Overview"], ["fin:revcost", "Revenue vs. Cost Over Time"], ["fin:bridge", "Net Profit Bridge"], ["fin:volume", "Ticket Volume: Sold vs. Used"], ["fin:tiers", "Revenue & Margin by Ticket Tier"], ["fin:channels", "Sales Channel Performance"], ["fin:budget", "Budget vs. Actual"], ["fin:costs", "Cost Breakdown"], ["fin:settings", "Finance settings"]];
+var FIN_TITLES = ["Ticket Revenue & Profitability Dashboard", "Event Ticketing & Financial Performance Overview", "Box Office Financial Summary", "Ticketing Operations & Margin Tracker", "Event P&L (Profit & Loss) Dashboard"];
+var FIN_NAV = { "fin:revcost": "Revenue vs. Cost", "fin:bridge": "Profit bridge", "fin:volume": "Sold vs. used", "fin:tiers": "By ticket tier", "fin:channels": "Sales channels", "fin:budget": "Budget vs. actual", "fin:costs": "Cost breakdown", "fin:settings": "Settings", fin: "Overview" };
+var TIER = { starter: "10 tickets", popular: "30 tickets", power: "80 tickets", plus: "J@rd Plus · monthly", plusyear: "J@rd Plus · yearly", st5: "+5 GB storage", st25: "+25 GB storage", st100: "+100 GB storage" };
+var CHAN = { fpx: "FPX online banking", card: "Card", tng: "Touch ’n Go", grab: "GrabPay", google_play: "Google Play", demo: "Demo top-up", unknown: "Not recorded" };
+var AIK = { quick: "Quick checks", deep: "Deep checks", watch: "Wishlist watches", price_alert: "Plus price alerts", econ: "Economy refresh" };
+function rm(x, d) { x = Number(x || 0); var neg = x < 0; x = Math.abs(x); return (neg ? "−" : "") + "RM " + x.toLocaleString(undefined, { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }); }
+function finSet() { var s = (M.fin && M.fin.settings) || {}; return { fx: Number(s.fx_usd) || 4.1, sf: Number(s.store_fee_pct == null ? 15 : s.store_fee_pct), tax: Number(s.tax_pct == null ? 8 : s.tax_pct), pf: Number(s.payment_fee_pct || 0), fixed: Array.isArray(s.fixed) ? s.fixed : [], mkt: Number(s.marketing_monthly || 0), bRev: Number(s.budget_revenue_monthly || 0), bCost: Number(s.budget_cost_monthly || 0), title: s.title || FIN_TITLES[0] }; }
+function finCalc(d) {
+  var s = finSet(), days = d.days || [], N = days.length || 1, fixedM = s.fixed.reduce(function (a, f) { return a + Number(f.amount || 0); }, 0);
+  var rows = days.map(function (x) {
+    var rev = Number(x.revenue), tax = rev * s.tax / (100 + s.tax), net = rev - tax, store = net * s.sf / 100, pay = net * s.pf / 100, ai = Number(x.ai_usd) * s.fx, fixed = fixedM / 30.4, mkt = s.mkt / 30.4;
+    var cost = tax + store + pay + ai + fixed + mkt;
+    return { d: x.d, rev: rev, tax: tax, store: store, pay: pay, ai: ai, fixed: fixed, mkt: mkt, cost: cost, profit: rev - cost, sold: Number(x.sold), free: Number(x.free), used: Number(x.used), orders: Number(x.orders) };
+  });
+  var T = rows.reduce(function (a, r) { Object.keys(r).forEach(function (k) { if (k !== "d") a[k] = (a[k] || 0) + r[k]; }); return a; }, {});
+  ["rev", "tax", "store", "pay", "ai", "fixed", "mkt", "cost", "profit", "sold", "free", "used", "orders"].forEach(function (k) { T[k] = T[k] || 0; });
+  var tierTickets = (d.tiers || []).filter(function (t) { return t.kind !== "storage"; });
+  var ticketRev = tierTickets.reduce(function (a, t) { return a + Number(t.revenue); }, 0), ticketSold = tierTickets.reduce(function (a, t) { return a + Number(t.tickets); }, 0);
+  var tiers = (d.tiers || []).map(function (t) {
+    var rev = Number(t.revenue), tax = rev * s.tax / (100 + s.tax), fees = (rev - tax) * (s.sf + s.pf) / 100, ai = t.kind === "storage" ? 0 : T.ai * (ticketSold ? Number(t.tickets) / ticketSold : 0);
+    var margin = rev - tax - fees - ai;
+    return { pack: t.pack, name: TIER[t.pack] || t.pack, kind: t.kind, orders: Number(t.orders), tickets: Number(t.tickets), rev: rev, margin: margin, mpct: rev ? margin / rev * 100 : 0, per: t.tickets ? rev / t.tickets : 0 };
+  });
+  var budRev = s.bRev * N / 30.4, budCost = s.bCost * N / 30.4;
+  var chk = d.checks || {}, kinds = {}; (d.ai_kinds || []).forEach(function (k) { kinds[k.kind] = (kinds[k.kind] || 0) + Number(k.usd) * s.fx; });
+  return { s: s, rows: rows, T: T, N: N, fixedM: fixedM, tiers: tiers, ticketRev: ticketRev, ticketSold: ticketSold,
+    avgPrice: ticketSold ? ticketRev / ticketSold : 0, margin: T.rev ? T.profit / T.rev * 100 : 0, cpt: T.used ? T.cost / T.used : 0, aipt: T.used ? T.ai / T.used : 0,
+    redeem: (T.sold + T.free) ? T.used / (T.sold + T.free) * 100 : 0, cac: d.new_payers ? T.mkt / d.new_payers : 0,
+    budRev: budRev, budCost: budCost, kinds: kinds, chk: chk,
+    channels: (d.channels || []).map(function (c) { return { name: CHAN[c.channel] || c.channel, orders: Number(c.orders), rev: Number(c.revenue), buyers: Number(c.buyers), aov: c.orders ? Number(c.revenue) / c.orders : 0 }; }) };
+}
+function bucket(rows, keys) {
+  if (rows.length <= 62) return rows.map(function (r) { var o = { label: String(r.d).slice(5).replace("-", "/") }; keys.forEach(function (k) { o[k] = r[k]; }); return o; });
+  var out = []; for (var i = 0; i < rows.length; i += 7) { var ch = rows.slice(i, i + 7), o = { label: "wk " + String(ch[0].d).slice(5).replace("-", "/") }; keys.forEach(function (k) { o[k] = ch.reduce(function (a, r) { return a + r[k]; }, 0); }); out.push(o); }
+  return out;
+}
+function fLegend(items) { return '<div class="flg">' + items.map(function (x) { return '<span><i style="background:' + x[1] + '"></i>' + esc(x[0]) + "</span>"; }).join("") + "</div>"; }
+function fLine(pts, series, big) {
+  if (!pts.length) return '<p class="ks">No data yet.</p>';
+  var W = 640, H = big ? 220 : 150, P = 6, vals = []; series.forEach(function (s) { pts.forEach(function (p) { vals.push(p[s[0]]); }); });
+  var mx = Math.max.apply(null, vals.concat([1])), mn = Math.min.apply(null, vals.concat([0])), rg = mx - mn || 1, step = pts.length > 1 ? (W - 2 * P) / (pts.length - 1) : 0;
+  var y = function (v) { return P + (mx - v) / rg * (H - 2 * P); }, x = function (i) { return P + i * step; };
+  var zero = mn < 0 ? '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#C9BEFF" stroke-dasharray="4 4"/>' : "";
+  var lines = series.map(function (s) { var dd = pts.map(function (p, i) { return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p[s[0]]).toFixed(1); }).join(" ");
+    return (s[3] ? '<path d="' + dd + " L" + x(pts.length - 1).toFixed(1) + " " + H + " L" + P + " " + H + 'Z" fill="' + s[2] + '" opacity=".12"/>' : "") + '<path d="' + dd + '" fill="none" stroke="' + s[2] + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      pts.map(function (p, i) { return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[s[0]]).toFixed(1) + '" r="' + (pts.length > 40 ? 0 : 3) + '" fill="' + s[2] + '"><title>' + esc(p.label) + " · " + esc(s[1]) + ": " + rm(p[s[0]]) + "</title></circle>"; }).join(""); }).join("");
+  var every = Math.ceil(pts.length / 8), lab = pts.map(function (p, i) { return i % every === 0 || i === pts.length - 1 ? '<text x="' + x(i).toFixed(1) + '" y="' + (H + 16) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + esc(p.label) + "</text>" : ""; }).join("");
+  return fLegend(series.map(function (s) { return [s[1], s[2]]; })) + '<svg width="100%" viewBox="0 0 ' + W + " " + (H + 22) + '" role="img" aria-label="' + esc(series.map(function (s) { return s[1]; }).join(" and ")) + ' over time">' + zero + lines + lab + "</svg>";
+}
+function fBars(pts, series, big) {
+  if (!pts.length) return '<p class="ks">No data yet.</p>';
+  var W = 640, H = big ? 220 : 150, mx = 1; pts.forEach(function (p) { series.forEach(function (s) { mx = Math.max(mx, p[s[0]]); }); });
+  var gw = W / pts.length, bw = Math.max(2, Math.min(18, gw * 0.8 / series.length)), every = Math.ceil(pts.length / 8);
+  var bars = pts.map(function (p, i) { return series.map(function (s, j) { var h = p[s[0]] / mx * H, bx = i * gw + (gw - bw * series.length) / 2 + j * bw; return '<rect x="' + bx.toFixed(1) + '" y="' + (H - h).toFixed(1) + '" width="' + (bw - 1) + '" height="' + Math.max(p[s[0]] ? 1.5 : 0, h).toFixed(1) + '" rx="2" fill="' + s[2] + '"><title>' + esc(p.label) + " · " + esc(s[1]) + ": " + n(p[s[0]]) + "</title></rect>"; }).join("") +
+    (i % every === 0 || i === pts.length - 1 ? '<text x="' + (i * gw + gw / 2).toFixed(1) + '" y="' + (H + 16) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + esc(p.label) + "</text>" : ""); }).join("");
+  return fLegend(series.map(function (s) { return [s[1], s[2]]; })) + '<svg width="100%" viewBox="0 0 ' + W + " " + (H + 22) + '" role="img" aria-label="' + esc(series.map(function (s) { return s[1]; }).join(", ")) + ' per period">' + bars + "</svg>";
+}
+function fWaterfall(c, big) {
+  var T = c.T, steps = [["Revenue", T.rev, "start"], ["Taxes", -T.tax], ["Store fees", -T.store], ["Payment fees", -T.pay], ["AI (API)", -T.ai], ["Fixed & ops", -T.fixed], ["Marketing", -T.mkt], ["Net profit", T.profit, "end"]];
+  var W = 640, H = big ? 220 : 160, run = 0, lo = 0, hi = Math.max(T.rev, 1);
+  steps.forEach(function (s) { if (s[2] === "start") run = s[1]; else if (!s[2]) { run += s[1]; lo = Math.min(lo, run); } }); lo = Math.min(lo, T.profit);
+  var rg = hi - lo || 1, y = function (v) { return 18 + (hi - v) / rg * (H - 26); }, gw = W / steps.length, bw = gw * 0.62; run = 0;
+  var g = steps.map(function (s, i) {
+    var top, bot, col;
+    if (s[2] === "start") { top = s[1]; bot = 0; col = "#5B2EFF"; run = s[1]; }
+    else if (s[2] === "end") { top = Math.max(s[1], 0); bot = Math.min(s[1], 0); col = s[1] >= 0 ? "#1A7F3C" : "#B3261E"; }
+    else { top = run; run += s[1]; bot = run; col = "#E0457B"; }
+    var y1 = y(Math.max(top, bot)), y2 = y(Math.min(top, bot)), x0 = i * gw + (gw - bw) / 2;
+    return '<rect x="' + x0.toFixed(1) + '" y="' + y1.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1.5, y2 - y1).toFixed(1) + '" rx="4" fill="' + col + '"><title>' + s[0] + ": " + rm(s[1]) + "</title></rect>" +
+      '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (y1 - 4).toFixed(1) + '" font-size="10" font-weight="700" fill="#1A0B5C" text-anchor="middle">' + (s[1] < 0 ? "−" : "") + Math.abs(Math.round(s[1])).toLocaleString() + "</text>" +
+      '<text x="' + (x0 + bw / 2).toFixed(1) + '" y="' + (H + 14) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + s[0] + "</text>";
+  }).join("");
+  return '<svg width="100%" viewBox="0 0 ' + W + " " + (H + 20) + '" role="img" aria-label="Revenue to net profit bridge"><line x1="0" x2="' + W + '" y1="' + y(0).toFixed(1) + '" y2="' + y(0).toFixed(1) + '" stroke="#DDD6F5"/>' + g + "</svg>";
+}
+function fH(rows, fmt, col) {
+  if (!rows.length) return '<p class="ks">No data yet.</p>';
+  var mx = Math.max.apply(null, rows.map(function (r) { return Math.abs(r[1]); }).concat([1e-9]));
+  return rows.map(function (r) { return '<div class="hb"><span class="hbl" title="' + esc(r[0]) + '">' + esc(r[0]) + '</span><span class="hbt"><span style="width:' + Math.max(1.5, Math.abs(r[1]) / mx * 100) + "%;background:" + (r[2] || col || "#5B2EFF") + '"></span></span><b>' + (fmt ? fmt(r[1]) : n(r[1])) + "</b></div>"; }).join("");
+}
+function finHead(title, sub, back) {
+  var days = M.finDays || 30, demo = M.finDemo !== false;
+  return '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div>' + (back ? '<button class="b s" data-p="fin">← Finance overview</button>' : "") + '<h1 class="h"' + (back ? ' style="margin-top:10px"' : "") + ">" + esc(title) + '</h1><div class="sub">' + esc(proj().name) + " · " + esc(sub || "last " + (days === 365 ? "12 months" : days + " days")) + ' · all amounts in RM</div></div>' +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div><label class="chk" style="height:36px;font-size:12px;font-weight:700"><input type="checkbox" data-a="fin-demo"' + (demo ? " checked" : "") + "> Include demo top-ups</label></div></div>" +
+    (M.fin && !M.fin.has_real ? '<div class="card" style="margin-top:14px;background:#FFF6E5;box-shadow:none;border:1px solid #FFD58A"><b>Payments aren’t live yet.</b> <span class="ks" style="color:#7A4400">Revenue here comes from demo top-ups at list price, so you can see how the dashboard works. Real Google Play sales will show up automatically once billing is connected.</span></div>' : "");
+}
+function finCard(title, page, body, sub) { return '<div class="card fc"><div class="fch"><b>' + esc(title) + "</b>" + (sub ? '<span class="ks">' + esc(sub) + "</span>" : "") + '<button class="b s" data-p="' + page + '">Open →</button></div>' + body + "</div>"; }
+function costCats(c) {
+  var T = c.T;
+  return [["AI (Anthropic API)", T.ai, "#5B2EFF"], ["Store fees (Google Play)", T.store, "#E0457B"], ["Taxes on sales", T.tax, "#FF8A00"], ["Payment processing", T.pay, "#1E5FA8"], ["Fixed & operational", T.fixed, "#0F9D9A"], ["Marketing", T.mkt, "#1A7F3C"]];
+}
+function vFinance() {
+  var d = M.fin, page = M.page;
+  if (page === "fin:settings") return vFinSettings();
+  if (!d) return finHead(page === "fin" ? finSet().title : FIN.filter(function (x) { return x[0] === page; })[0][1], "", page !== "fin") + '<div class="mload"><span></span><span></span><span></span></div>';
+  var c = finCalc(d), T = c.T, pts;
+  if (page === "fin") {
+    var k = [
+      ["Total Revenue", rm(T.rev), n(T.orders) + " orders"], ["Total Tickets Used", n(T.used), n(T.sold) + " sold · " + n(T.free) + " free given"],
+      ["Average Price per Ticket", rm(c.avgPrice), "ticket packs and Plus"], ["Total Cost", rm(T.cost), "AI, fees, taxes, fixed, marketing"],
+      ["Net Profit", rm(T.profit), T.profit >= 0 ? "after every cost" : "loss after every cost", T.profit >= 0 ? "good" : "bad"], ["Net Profit Margin (%)", (T.rev ? c.margin.toFixed(1) : "0.0") + "%", "net profit ÷ revenue", T.rev && c.margin < 0 ? "bad" : ""],
+      ["Cost per Ticket", rm(c.cpt), "AI alone: " + rm(c.aipt) + " per ticket used"], ["Ticket Redemption Rate (%)", c.redeem.toFixed(1) + "%", "used ÷ (sold + free) in this period"]
+    ];
+    pts = bucket(c.rows, ["rev", "cost", "profit", "sold", "used", "free"]);
+    var cats = costCats(c);
+    return finHead(c.s.title) +
+      '<div class="g4" style="margin-top:16px">' + k.map(function (x) { return kcard(x[0], x[1], x[2], x[3]); }).join("") + "</div>" +
+      '<div class="g2" style="margin-top:14px">' +
+        finCard("Revenue vs. Cost Over Time", "fin:revcost", fLine(pts, [["rev", "Revenue", "#5B2EFF", 1], ["cost", "Cost", "#E0457B"]])) +
+        finCard("Net Profit Bridge (Revenue to Profit Waterfall)", "fin:bridge", fWaterfall(c)) +
+        finCard("Ticket Volume: Sold vs. Used", "fin:volume", fBars(pts, [["sold", "Sold", "#5B2EFF"], ["used", "Used", "#D4FF3A"]])) +
+        finCard("Revenue & Margin by Ticket Tier", "fin:tiers", fH(c.tiers.map(function (t) { return [t.name, t.rev]; }), function (v) { return rm(v, 0); })) +
+        finCard("Sales Channel Performance", "fin:channels", fH(c.channels.map(function (x) { return [x.name, x.rev]; }), function (v) { return rm(v, 0); }, "#1E5FA8")) +
+        finCard("Budget vs. Actual Financial Variance", "fin:budget", budgetBody(c, false)) +
+      "</div>" + sec("Detailed cost breakdown", "where the money goes") +
+      '<div class="g3">' + [["Total Cost Details", rm(T.cost), "every cost line"], ["Direct & Variable Costs (Per-Ticket Expenses)", rm(c.aipt), "AI cost per ticket used"], ["Fixed & Operational Costs", rm(T.fixed), rm(c.fixedM, 0) + " a month"], ["Ticketing & Payment Processing Fees", rm(T.store + T.pay + T.tax), "store fees, payment fees, taxes"], ["Marketing Spend & Customer Acquisition Cost (CAC)", rm(T.mkt), "CAC " + rm(c.cac) + " · " + n(d.new_payers) + " new payers"], ["Expense Breakdown by Category", cats.filter(function (x) { return x[1] > 0; }).length + " categories", "share of total cost"]].map(function (x, i) {
+        return '<button class="card click" data-p="fin:costs" data-sec="c' + i + '"><div class="kl">' + esc(x[0].toUpperCase()) + '</div><div class="kv" style="font-size:22px">' + x[1] + '</div><div class="ks">' + esc(x[2]) + '</div><div class="more">See detail →</div></button>'; }).join("") + "</div>";
+  }
+  var title = FIN.filter(function (x) { return x[0] === page; })[0][1], body = "";
+  pts = bucket(c.rows, ["rev", "cost", "profit", "sold", "used", "free", "orders", "ai", "store", "tax", "pay"]);
+  if (page === "fin:revcost") {
+    body = '<div class="card" style="margin-top:14px">' + fLine(pts, [["rev", "Revenue", "#5B2EFF", 1], ["cost", "Cost", "#E0457B"], ["profit", "Net profit", "#1A7F3C"]], true) + "</div>" +
+      tbl("By period", ["Period", "Revenue:r", "Cost:r", "Net profit:r", "Margin:r"], pts.slice().reverse().map(function (p) { return [p.label, rm(p.rev), rm(p.cost), rm(p.profit), p.rev ? (p.profit / p.rev * 100).toFixed(1) + "%" : "—"]; }));
+  } else if (page === "fin:bridge") {
+    body = '<div class="card" style="margin-top:14px">' + fWaterfall(c, true) + "</div>" +
+      tbl("Revenue to profit", ["Step", "Amount:r", "% of revenue:r"], [["Revenue", T.rev], ["− Taxes on sales (" + c.s.tax + "%)", -T.tax], ["− Store fees (" + c.s.sf + "%)", -T.store], ["− Payment fees (" + c.s.pf + "%)", -T.pay], ["− AI (Anthropic API)", -T.ai], ["− Fixed & operational", -T.fixed], ["− Marketing", -T.mkt], ["= Net profit", T.profit]].map(function (r) { return [r[0], rm(r[1]), T.rev ? (r[1] / T.rev * 100).toFixed(1) + "%" : "—"]; }));
+  } else if (page === "fin:volume") {
+    body = '<div class="g4" style="margin-top:14px">' + kcard("Tickets sold", n(T.sold), "paid packs and Plus") + kcard("Free tickets given", n(T.free), "sign-up and coupons") + kcard("Tickets used", n(T.used), "checks and watches, after refunds") + kcard("Redemption rate", c.redeem.toFixed(1) + "%", "used ÷ (sold + free)") + "</div>" +
+      '<div class="card" style="margin-top:14px">' + fBars(pts, [["sold", "Sold", "#5B2EFF"], ["free", "Free", "#C9BEFF"], ["used", "Used", "#D4FF3A"]], true) + "</div>" +
+      tbl("Tickets used by type", ["Type", "Tickets:r"], (d.used_by || []).map(function (u) { return [({ check: "Checks", watch: "Wishlist watches" })[u.reason] || u.reason, n(u.tickets)]; }));
+  } else if (page === "fin:tiers") {
+    body = '<div class="card" style="margin-top:14px"><b>Revenue by tier</b><div style="margin-top:10px">' + fH(c.tiers.map(function (t) { return [t.name, t.rev]; }), function (v) { return rm(v, 0); }) + '</div></div>' +
+      tbl("Revenue & margin by ticket tier", ["Tier", "Orders:r", "Tickets:r", "Revenue:r", "Price per ticket:r", "Est. margin:r", "Margin %:r"], c.tiers.map(function (t) { return [t.name, n(t.orders), t.kind === "storage" ? "—" : n(t.tickets), rm(t.rev), t.tickets ? rm(t.per) : "—", rm(t.margin), t.mpct.toFixed(1) + "%"]; })) +
+      '<p class="ks" style="margin-top:8px">Margin = revenue − taxes − store and payment fees − AI cost shared out by tickets sold. Fixed costs and marketing aren’t split by tier.</p>';
+  } else if (page === "fin:channels") {
+    body = '<div class="card" style="margin-top:14px"><b>Revenue by channel</b><div style="margin-top:10px">' + fH(c.channels.map(function (x) { return [x.name, x.rev]; }), function (v) { return rm(v, 0); }, "#1E5FA8") + '</div></div>' +
+      tbl("Sales channel performance", ["Channel", "Orders:r", "Buyers:r", "Revenue:r", "Avg order:r", "Share:r"], c.channels.map(function (x) { return [x.name, n(x.orders), n(x.buyers), rm(x.rev), rm(x.aov), T.rev ? (x.rev / T.rev * 100).toFixed(1) + "%" : "—"]; }));
+  } else if (page === "fin:budget") {
+    body = '<div class="card" style="margin-top:14px">' + budgetBody(c, true) + "</div>";
+  } else if (page === "fin:costs") {
+    var cats = costCats(c), kinds = Object.keys(c.kinds).map(function (k) { return [AIK[k] || k, c.kinds[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    var chk = c.chk, perCheck = [["Quick check (1 ticket)", c.kinds.quick, chk.quick, 1], ["Deep check (3 tickets)", c.kinds.deep, chk.deep, 3], ["Wishlist watch (1 ticket or free with Plus)", c.kinds.watch, chk.watch, 1]];
+    body = '<div id="h-c0">' + sec("Total Cost Details") + tbl("", ["Cost line", "Amount:r", "Share:r"], cats.map(function (x) { return [x[0], rm(x[1]), T.cost ? (x[1] / T.cost * 100).toFixed(1) + "%" : "—"]; }).concat([["Total cost", rm(T.cost), "100%"]]), true) + "</div>" +
+      '<div id="h-c1">' + sec("Direct & Variable Costs (Per-Ticket Expenses)", "AI cost per check and per ticket") + tbl("", ["Check type", "Checks:r", "AI cost:r", "Per check:r", "Per ticket:r"], perCheck.map(function (r) { var cost = r[1] || 0, cnt = Number(r[2] || 0); return [r[0], n(cnt), rm(cost), cnt ? rm(cost / cnt) : "—", cnt ? rm(cost / cnt / r[3]) : "—"]; }).concat([["All tickets used", n(T.used), rm(T.ai), "—", rm(c.aipt)]]), true) + "</div>" +
+      '<div id="h-c2">' + sec("Fixed & Operational Costs", "monthly amounts from Finance settings, spread over the period") + tbl("", ["Item", "Per month:r", "This period:r"], c.s.fixed.map(function (f) { return [f.name, rm(f.amount), rm(Number(f.amount) * c.N / 30.4)]; }).concat([["Total", rm(c.fixedM), rm(T.fixed)]]), true) + '<button class="b s" data-p="fin:settings" style="margin-top:8px">Edit fixed costs</button></div>' +
+      '<div id="h-c3">' + sec("Ticketing & Payment Processing Fees") + tbl("", ["Fee", "Rate:r", "Amount:r"], [["Google Play service and billing fee", c.s.sf + "% of sales after tax", rm(T.store)], ["Payment processing", c.s.pf + "%", rm(T.pay)], ["Taxes included in prices (SST / digital tax)", c.s.tax + "%", rm(T.tax)], ["Total", "", rm(T.store + T.pay + T.tax)]], true) + "</div>" +
+      '<div id="h-c4">' + sec("Marketing Spend & Customer Acquisition Cost (CAC)") + '<div class="g4">' + kcard("Marketing spend", rm(T.mkt), rm(c.s.mkt, 0) + " a month") + kcard("New paying customers", n(d.new_payers), "first purchase in this period") + kcard("CAC", rm(c.cac), "marketing ÷ new paying customers") + kcard("Revenue per payer", rm(d.payers ? T.rev / d.payers : 0), n(d.payers) + " paying customers") + "</div></div>" +
+      '<div id="h-c5">' + sec("Expense Breakdown by Category") + '<div class="g2"><div class="card"><b>By category</b><div style="margin-top:10px">' + fH(cats.map(function (x) { return [x[0], x[1], x[2]]; }), function (v) { return rm(v); }) + '</div></div><div class="card"><b>AI cost by job</b><div style="margin-top:10px">' + fH(kinds, function (v) { return rm(v); }) + "</div></div></div></div>";
+  }
+  return finHead(title, "", true) + body;
+}
+function budgetBody(c, big) {
+  var T = c.T, s = c.s;
+  if (!s.bRev && !s.bCost) return '<p class="ks">No budget set yet. Add a monthly revenue and cost budget in <a href="#" data-p="fin:settings">Finance settings</a>.</p>';
+  var rows = [["Revenue", c.budRev, T.rev, 1], ["Cost", c.budCost, T.cost, -1], ["Net profit", c.budRev - c.budCost, T.profit, 1]];
+  var mx = Math.max.apply(null, rows.map(function (r) { return Math.max(Math.abs(r[1]), Math.abs(r[2])); }).concat([1]));
+  var vis = rows.map(function (r) { var v = r[2] - r[1], good = v * r[3] >= 0; return '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>' + r[0] + '</b><span style="color:' + (good ? "#1A7F3C" : "#B3261E") + ';font-weight:700">' + (v >= 0 ? "+" : "") + rm(v) + (r[1] ? " (" + (v / Math.abs(r[1]) * 100).toFixed(1) + "%)" : "") + "</span></div>" +
+    '<div class="bva"><span style="width:' + (Math.abs(r[1]) / mx * 100) + '%;background:#C9BEFF"></span></div><div class="bva"><span style="width:' + (Math.abs(r[2]) / mx * 100) + "%;background:" + (good ? "#5B2EFF" : "#E0457B") + '"></span></div></div>'; }).join("");
+  return fLegend([["Budget", "#C9BEFF"], ["Actual", "#5B2EFF"]]) + vis + (big ? tbl("Variance", ["Line", "Budget:r", "Actual:r", "Variance:r", "Variance %:r"], rows.map(function (r) { var v = r[2] - r[1]; return [r[0], rm(r[1]), rm(r[2]), (v >= 0 ? "+" : "") + rm(v), r[1] ? (v / Math.abs(r[1]) * 100).toFixed(1) + "%" : "—"]; })) + '<p class="ks" style="margin-top:8px">Monthly budgets are spread evenly over the ' + c.N + "-day period.</p>" : "");
+}
+function tbl(title, cols, rows, flat) {
+  var cc = cols.map(function (x) { var p = x.split(":"); return { l: p[0], r: p[1] === "r" }; });
+  return '<div class="card" style="margin-top:' + (flat ? 0 : 14) + 'px">' + (title ? "<b>" + esc(title) + "</b>" : "") + '<div style="overflow:auto;margin-top:' + (title ? 8 : 0) + 'px"><table class="tb"><tr>' + cc.map(function (c) { return "<th" + (c.r ? ' style="text-align:right"' : "") + ">" + esc(c.l) + "</th>"; }).join("") + "</tr>" +
+    (rows.length ? rows.map(function (r, i) { var last = /^(Total|= )/.test(String(r[0])); return "<tr" + (last ? ' style="font-weight:800"' : "") + ">" + r.map(function (v, j) { return "<td" + (cc[j] && cc[j].r ? ' style="text-align:right;font-variant-numeric:tabular-nums"' : "") + ">" + esc(v) + "</td>"; }).join("") + "</tr>"; }).join("") : '<tr><td colspan="' + cc.length + '" class="sub">Nothing here yet.</td></tr>') + "</table></div></div>";
+}
+function vFinSettings() {
+  var s = finSet(), f = M.finForm || (M.finForm = { fixed: s.fixed.map(function (x) { return { name: x.name, amount: x.amount }; }) });
+  var ro = !canManage();
+  var num = function (id, label, v, hint) { return '<div><label class="lab" for="' + id + '">' + label + '</label><input class="in" id="' + id + '" inputmode="decimal" value="' + esc(v) + '"' + (ro ? " disabled" : "") + ">" + (hint ? '<div class="ks">' + hint + "</div>" : "") + "</div>"; };
+  return '<div><button class="b s" data-p="fin">← Finance overview</button><h1 class="h" style="margin-top:10px">Finance settings</h1><div class="sub">These turn raw sales and AI usage into a P&amp;L. Changes are saved for every admin and logged in the audit log.</div></div>' +
+    '<form id="f-fin" class="card" style="margin-top:16px;max-width:760px">' +
+    '<label class="lab" for="fs-title">DASHBOARD TITLE</label><select class="in" id="fs-title"' + (ro ? " disabled" : "") + ">" + FIN_TITLES.map(function (t) { return "<option" + (t === s.title ? " selected" : "") + ">" + esc(t) + "</option>"; }).join("") + "</select>" +
+    '<div class="row2">' + num("fs-fx", "RM PER US$1 (AI COSTS ARE BILLED IN US$)", s.fx) + num("fs-sf", "STORE FEE %", s.sf, "Google Play: 15% for subscriptions") + "</div>" +
+    '<div class="row2">' + num("fs-tax", "TAX INCLUDED IN PRICES %", s.tax, "SST / digital services tax") + num("fs-pf", "PAYMENT PROCESSING %", s.pf, "0 when Google Play handles billing") + "</div>" +
+    '<label class="lab">FIXED &amp; OPERATIONAL COSTS (RM A MONTH)</label>' + f.fixed.map(function (x, i) { return '<div class="row2" style="margin-bottom:6px"><input class="in fx-n" data-i="' + i + '" value="' + esc(x.name) + '" placeholder="e.g. Supabase Pro"' + (ro ? " disabled" : "") + '><div style="display:flex;gap:6px"><input class="in fx-a" data-i="' + i + '" inputmode="decimal" value="' + esc(x.amount) + '"' + (ro ? " disabled" : "") + ">" + (ro ? "" : '<button type="button" class="b r" data-a="fx-del" data-i="' + i + '" aria-label="Remove ' + esc(x.name) + '">✕</button>') + "</div></div>"; }).join("") +
+    (ro ? "" : '<button type="button" class="b s" data-a="fx-add">+ Add a cost</button>') +
+    '<div class="row2">' + num("fs-mkt", "MARKETING SPEND (RM A MONTH)", s.mkt) + "<div></div></div>" +
+    '<div class="row2">' + num("fs-brev", "REVENUE BUDGET (RM A MONTH)", s.bRev) + num("fs-bcost", "COST BUDGET (RM A MONTH)", s.bCost) + "</div>" +
+    (ro ? '<p class="ks" style="margin-top:12px">Only owners and admins can change these.</p>' : '<button class="b p" type="submit" style="margin-top:16px">Save settings</button>') + "</form>";
+}
+function readFinForm() { var f = M.finForm; if (!f) return; document.querySelectorAll(".fx-n").forEach(function (el) { f.fixed[el.dataset.i].name = el.value; }); document.querySelectorAll(".fx-a").forEach(function (el) { f.fixed[el.dataset.i].amount = el.value; }); }
+function saveFin() {
+  readFinForm();
+  var v = function (id) { return ($(id) || {}).value; };
+  var body = { title: v("fs-title"), fx_usd: v("fs-fx"), store_fee_pct: v("fs-sf"), tax_pct: v("fs-tax"), payment_fee_pct: v("fs-pf"), marketing_monthly: v("fs-mkt"), budget_revenue_monthly: v("fs-brev"), budget_cost_monthly: v("fs-bcost"), fixed: M.finForm.fixed.filter(function (x) { return String(x.name).trim(); }) };
+  api("finance-settings", body).then(function (j) { if (M.fin) M.fin.settings = j.settings; M.finForm = null; toast("Finance settings saved."); goPage("fin"); }).catch(function (e) { toast(e && e.error === "not_allowed" ? "Your role can’t change finance settings." : "Couldn’t save the settings."); });
+}
+function loadFinance() {
+  var days = M.finDays || 30, demo = M.finDemo !== false;
+  return api("finance", { days: days, demo: demo }).then(function (j) { if ((M.finDays || 30) === days && (M.finDemo !== false) === demo) { M.fin = j; render(); } }).catch(function (e) { authFail(e) || toast(e && e.error === "not_allowed" ? "Finance is for owners and admins." : "Couldn’t load finance."); });
+}
+
 /* ---------- render & loading ---------- */
+function bootScreen() { return '<div class="boot" role="status" aria-label="Loading Moreeh"><div class="glow"></div><div class="logo">M</div><div class="chart" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><div class="wm">More<b>eh</b></div><div class="st">Loading your dashboard…</div></div>'; }
 function render() {
   var r = $("root"), p = proj(), home = M.conn.home;
   if (M.login) { r.innerHTML = vLogin(proj(M.login)); return; }
-  if (!home || home.state !== "ok") { r.innerHTML = home && home.state === "checking" ? '<div class="login"><p style="color:#fff">Loading…</p></div>' : vLogin(HOME); return; }
+  if (!home || home.state !== "ok") { r.innerHTML = home && home.state === "checking" ? bootScreen() : vLogin(HOME); return; }
   var c = M.conn[p.id], body;
   if (M.page === "projects") body = vProjects();
   else if (M.page === "help") body = vHelp();
-  else if (!c || c.state === "checking") body = '<p class="sub">Connecting to ' + esc(p.name) + "…</p>";
+  else if (!c || c.state === "checking") body = '<div class="connl"><div class="mload"><span></span><span></span><span></span></div><p class="sub" style="margin:0">Connecting to ' + esc(p.name) + "…</p></div>";
   else if (c.state === "signin") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:520px"><b>Sign in to this project</b><p class="ks">Each app has its own admin login.</p><button class="b p" data-a="signin" data-id="' + esc(p.id) + '">Sign in to ' + esc(p.name) + "</button></div>";
   else if (c.state === "error") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:620px;border-left:4px solid #B3261E"><b>' + esc(CONN_TXT[c.code] || c.code) + '</b><p class="ks">See <a href="#" data-p="help" data-sec="trouble">Troubleshooting</a>.</p><div style="display:flex;gap:8px"><button class="b" data-a="test" data-id="' + esc(p.id) + '">Try again</button><button class="b" data-a="signin" data-id="' + esc(p.id) + '">Sign in with another account</button></div></div>';
-  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : M.page === "insights" && has("insights") ? vInsights() : /^ins:/.test(M.page) && has("insights") ? vInsDetail(M.page.slice(4)) : M.page === "users" && has("users") ? vUsers() : M.page === "safety" && has("safety") ? vSafety() : M.page === "support" && has("support") ? vSupport() : vOverview();
+  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : M.page === "insights" && has("insights") ? vInsights() : /^ins:/.test(M.page) && has("insights") ? vInsDetail(M.page.slice(4)) : /^fin/.test(M.page) && has("finance") ? vFinance() : M.page === "users" && has("users") ? vUsers() : M.page === "safety" && has("safety") ? vSafety() : M.page === "support" && has("support") ? vSupport() : vOverview();
   r.innerHTML = shell(body);
   if (M.focus) { var f = $(M.focus); if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} } M.focus = null; }
 }
@@ -843,11 +1076,12 @@ function loadCoupons() { return api("coupons").then(function (j) { M.coupons = j
 function loadAudit() { return api("audit").then(function (j) { M.audit = j.audit; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load the audit log."); }); }
 function authFail(e) { if (e && (e.error === "unauthorized" || e.error === "signed_out")) { M.conn[M.cur] = { state: "signin" }; render(); return true; } return false; }
 function goPage(p, sec) {
+  if (p === "fin:settings") M.finForm = null;
   M.page = p; M.err = ""; M.dd = false; render();
   var c = M.conn[M.cur];
-  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (/^ins:/.test(p)) { if (!M.ins) loadInsights(); else if (p === "ins:ai" && has("ai_usage")) loadAi(); M.idet = null; loadInsDetail(p.slice(4)); } if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
+  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (/^ins:/.test(p)) { if (!M.ins) loadInsights(); else if (p === "ins:ai" && has("ai_usage")) loadAi(); M.idet = null; loadInsDetail(p.slice(4)); } if (/^fin/.test(p)) { if (!M.fin) loadFinance(); M.navOpen = M.navOpen || {}; M.navOpen.finance = true; } if (/^ins/.test(p)) { M.navOpen = M.navOpen || {}; M.navOpen.insights = true; } if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
   if (p === "projects") M.projects.forEach(function (q) { if (!M.conn[q.id]) connect(q); });
-  if (p === "help" && sec) setTimeout(function () { var el = $("h-" + sec); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 30);
+  if (sec) setTimeout(function () { var el = $("h-" + sec); if (el) el.scrollIntoView({ behavior: "smooth" }); }, p === "help" ? 30 : 120);
 }
 function rememberUid(p) { return client(p).auth.getUser().then(function (u) { M.uid = M.uid || {}; M.uid[p.id] = u.data.user && u.data.user.id; }).catch(function () {}); }
 function startHome() {
@@ -879,6 +1113,7 @@ document.addEventListener("submit", function (e) {
   }
   if (f.id === "f-coupon") createCoupon();
   if (f.id === "f-ai") saveAi();
+  if (f.id === "f-fin") saveFin();
   if (f.id === "f-uq") { M.uq = ($("u-q") || {}).value || ""; loadUsers(); }
   if (f.id === "f-note") userAction("note");
   if (f.id === "f-reply") sendReply((e.submitter && e.submitter.dataset.v) || "waiting");
@@ -918,6 +1153,11 @@ document.addEventListener("click", function (e) {
   if (a === "logout") { e.preventDefault(); client().auth.signOut().then(function () { if (M.cur === "home") { M.conn = {}; } else { M.conn[M.cur] = { state: "signin" }; } render(); }); }
   if (a === "kind") { readForm(); M.form.kind = t.dataset.k; render(); }
   if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; M.ai = null; render(); loadInsights(); if (/^ins:/.test(M.page)) loadInsDetail(M.page.slice(4)); }
+  if (a === "nav-tog") { M.navOpen = M.navOpen || {}; M.navOpen[t.dataset.v] = !M.navOpen[t.dataset.v]; render(); }
+  if (a === "fin-days") { M.finDays = Number(t.dataset.v); M.fin = null; render(); loadFinance(); }
+  if (a === "fin-demo") { M.finDemo = t.checked; M.fin = null; render(); loadFinance(); }
+  if (a === "fx-add") { readFinForm(); M.finForm.fixed.push({ name: "", amount: "" }); render(); }
+  if (a === "fx-del") { readFinForm(); M.finForm.fixed.splice(Number(t.dataset.i), 1); render(); }
   if (a === "id-csv") detCsv(Number(t.dataset.i));
   if (a === "id-more") { e.preventDefault(); M.idmore = M.idmore || {}; M.idmore[t.dataset.i] = 1; render(); }
   if (a === "ai-edit") { M.aiEdit = !M.aiEdit; render(); }
@@ -937,8 +1177,9 @@ document.addEventListener("click", function (e) {
     api("coupon-toggle", { id: t.dataset.id, active: t.dataset.on === "1" }).then(function () { toast(t.dataset.on === "1" ? "Coupon switched on." : "Coupon switched off. The code stops working now."); loadCoupons(); }).catch(function () { t.disabled = false; toast("Couldn’t change it."); });
   }
 });
-render();
-client(HOME).auth.getSession().then(function (r) { if (r.data && r.data.session) startHome(); else render(); });
+M.conn.home = { state: "checking" }; render();
+var BOOT_T0 = Date.now();
+client(HOME).auth.getSession().then(function (r) { setTimeout(function () { if (r.data && r.data.session) startHome(); else { M.conn.home = null; render(); } }, Math.max(0, 1200 - (Date.now() - BOOT_T0))); }).catch(function () { M.conn.home = null; render(); });
 </script>
 </body>
 </html>
