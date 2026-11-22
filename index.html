@@ -19,6 +19,8 @@ button,input,select{font:inherit;color:inherit}
 .appsw{margin:18px 4px 16px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-size:12.5px;display:flex;gap:8px}.appsw b span{color:#D4FF3A}
 .nav{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:12px;font-size:13px;color:#C9BEFF;font-weight:600;background:none;border:0;width:100%;text-align:left;cursor:pointer}
 .nav:hover{background:rgba(255,255,255,.06)}.nav.on{background:#5B2EFF;color:#fff}.nav[disabled]{opacity:.45;cursor:default}.nav small{margin-left:auto;font-size:10px;opacity:.8}
+.nav.sub{height:32px;padding-left:38px;font-size:12px;font-weight:600}
+.shrow{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}.shrow .b{margin-bottom:10px}
 .nav i{font-style:normal;margin-left:auto;font-size:11px;background:#FFB547;color:#1A0B5C;border-radius:9px;padding:1px 7px;font-weight:800}
 .who{margin-top:auto;display:flex;align-items:center;gap:9px;padding:0 8px;font-size:12px}.who span{width:30px;height:30px;border-radius:15px;background:#5B2EFF;display:flex;align-items:center;justify-content:center;font-weight:800}
 .main{flex:1;padding:24px 28px;min-width:0}
@@ -160,7 +162,7 @@ function switchTo(id) {
   M.cur = id; M.dd = false; M.ov = M.coupons = M.audit = M.detail = null; M.created = null;
   try { localStorage.setItem("moreeh_cur", id); } catch (e) {}
   if (["projects", "help"].indexOf(M.page) >= 0) M.page = "overview";
-  M.ai = M.ins = M.users = M.usel = M.udata = M.saf = M.sup = M.thr = null; M.supUnread = 0;
+  M.idet = null; M.ai = M.ins = M.users = M.usel = M.udata = M.saf = M.sup = M.thr = null; M.supUnread = 0;
   connect(proj()).then(function (ok) { if (ok) goPage(has(M.page) ? M.page : "overview"); });
 }
 
@@ -183,7 +185,9 @@ function shell(body) {
   var p = proj(), m = me() || {};
   var nav = NAV.filter(function (x) { return x[0] === "overview" || x[0] === "audit" || has(x[0]); }).map(function (x) {
     var badge = x[0] === "safety" && M.ov && M.ov.safety_holds ? "<i>" + M.ov.safety_holds + "</i>" : x[0] === "support" && M.supUnread ? "<i>" + M.supUnread + "</i>" : "";
-    return '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
+    var main = '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
+    if (x[0] === "insights") main += INS.filter(function (s) { return s[0] !== "ai" || has("ai_usage"); }).map(function (s) { return '<button class="nav sub' + (M.page === "ins:" + s[0] ? " on" : "") + '" data-p="ins:' + s[0] + '">' + esc(s[1]) + "</button>"; }).join("");
+    return main;
   }).join("");
   var dd = M.dd ? '<div class="dd">' + M.projects.map(function (q) {
     return '<button data-a="switch" data-id="' + esc(q.id) + '"><span class="pdot" style="background:' + esc(q.color) + '"></span>' + esc(q.name) + (q.env === "test" ? ' <span class="tag done">test</span>' : "") + (q.id === M.cur ? '<span style="margin-left:auto">✓</span>' : "") + "</button>";
@@ -482,53 +486,113 @@ function hbars(obj, total, fmt) {
 function sec(title, sub) { return '<h2 class="sh">' + esc(title) + (sub ? ' <span class="ks" style="font-weight:600">' + esc(sub) + "</span>" : "") + "</h2>"; }
 
 /* ---------- insights ---------- */
-function vInsights() {
-  var d = M.ins, days = M.insDays || 30;
-  var head = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h1 class="h">Insights</h1><div class="sub">' + esc(proj().name) + ' · counts cover the last ' + days + ' days unless a box says otherwise</div></div><div class="seg">' +
-    [7, 30, 90].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="ins-days" data-v="' + x + '">' + x + " days</button>"; }).join("") + "</div></div>";
-  if (!d) return head + '<p class="sub">Loading…</p>';
+var INS = [["sales", "Sales & conversion"], ["ai", "AI usage & cost"], ["funnel", "Free-ticket funnel"], ["engagement", "Engagement & retention"], ["inventory", "Inventory & wishlist"], ["quality", "Quality & AI health"], ["devices", "Devices"]];
+function insTitle(k) { for (var i = 0; i < INS.length; i++) if (INS[i][0] === k) return INS[i][1]; return k; }
+function insSummary(d, key) {
   var s = d.sales || {}, f = d.funnel || {}, e = d.engagement || {}, inv = d.inventory || {}, w = d.wishlist || {}, q = d.quality || {}, dv = d.devices || {};
-  var sticky = pct(e.dau, e.mau);
-  var steps = [["Signed up", f.signed_up], ["Did a first check", f.first_check], ["Used all 5 free tickets", f.used_all_free], ["Bought tickets or Plus", f.bought]];
-  var funnel = steps.map(function (st, i) {
-    var base = steps[0][1] || 0, prev = i ? steps[i - 1][1] : base;
-    return '<div class="fn"><span class="fnl">' + esc(st[0]) + '</span><span class="hbt" style="height:26px;border-radius:8px"><span style="width:' + (base ? Math.max(2, (st[1] || 0) / base * 100) : 2) + '%;border-radius:8px"></span></span><b>' + n(st[1]) + '</b><span class="ks" style="width:120px">' + (i ? pct(st[1], prev) + "% of the step before" : "") + "</span></div>";
-  }).join("");
-  var refundRate = pct(q.refunded, q.checks);
-  var vb = inv.value_by_currency || {}, val = Object.keys(vb).map(function (k) { return k + " " + n(vb[k]); }).join(" · ") || "—";
-  var vd = inv.verdicts || {};
-  return head +
-    sec("Sales & conversion") + '<div class="kpis">' +
+  if (key === "sales") return '<div class="kpis">' +
       kcard("Tickets sold", n(s.tickets_sold) + " ◆", n(s.orders) + " orders" + (s.test_orders ? " · " + n(s.test_orders) + " test (no payment)" : "")) +
       kcard("J@rd Plus", n(s.plus_active), "active right now") +
       kcard("Paying users", pct(f.bought, f.signed_up) + "%", n(f.bought) + " of " + n(f.signed_up) + " new sign-ups bought") +
       kcard("Coupon tickets", n(s.coupon_tickets) + " ◆", n(f.coupon_users) + " users redeemed · " + n(f.coupon_then_bought) + " bought later") +
       kcard("Refunded checks", n(s.refunds), "tickets given back when a check failed") + "</div>" +
-    (s.test_orders && s.test_orders === s.orders ? '<div class="callout" style="margin-top:12px">All orders so far are test top-ups (payments aren’t switched on yet), so sales numbers are for testing only.</div>' : "") +
-    (has("ai_usage") ? vAiUsage() : "") +
-    sec("Free-ticket funnel", "new sign-ups in this period") + '<div class="card">' + funnel +
-      '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + "</b></div></div>" +
-    sec("Engagement & retention") + '<div class="kpis">' +
+    (s.test_orders && s.test_orders === s.orders ? '<div class="callout" style="margin-top:12px">All orders so far are test top-ups (payments aren’t switched on yet), so sales numbers are for testing only.</div>' : "");
+  if (key === "funnel") {
+    var steps = [["Signed up", f.signed_up], ["Did a first check", f.first_check], ["Used all 5 free tickets", f.used_all_free], ["Bought tickets or Plus", f.bought]];
+    return '<div class="card">' + steps.map(function (st, i) {
+      var base = steps[0][1] || 0, prev = i ? steps[i - 1][1] : base;
+      return '<div class="fn"><span class="fnl">' + esc(st[0]) + '</span><span class="hbt" style="height:26px;border-radius:8px"><span style="width:' + (base ? Math.max(2, (st[1] || 0) / base * 100) : 2) + '%;border-radius:8px"></span></span><b>' + n(st[1]) + '</b><span class="ks" style="width:120px">' + (i ? pct(st[1], prev) + "% of the step before" : "") + "</span></div>";
+    }).join("") + '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + "</b></div></div>";
+  }
+  if (key === "engagement") return '<div class="kpis">' +
       kcard("Daily active", n(e.dau), "last 24 hours") + kcard("Weekly active", n(e.wau), "last 7 days") + kcard("Monthly active", n(e.mau), "last 30 days") +
-      kcard("Stickiness", sticky + "%", "daily ÷ monthly active") + "</div>" +
+      kcard("Stickiness", pct(e.dau, e.mau) + "%", "daily ÷ monthly active") + "</div>" +
     '<div class="kpis">' +
       kcard("Day 1 return", e.d1 == null ? "—" : e.d1 + "%", "came back a day after joining") + kcard("Day 7 return", e.d7 == null ? "—" : e.d7 + "%", "came back a week later") + kcard("Day 30 return", e.d30 == null ? "—" : e.d30 + "%", "came back a month later") +
       kcard("Sessions", n(e.sessions), "avg " + (e.avg_session_mins == null ? "—" : e.avg_session_mins + " min") + " · median " + (e.median_session_mins == null ? "—" : e.median_session_mins + " min")) +
       kcard("Checks per active user", e.checks_per_active == null ? "—" : e.checks_per_active, "in this period") + "</div>" +
-    '<div style="margin-top:14px">' + barChart("Active users per day", "last 14 days", e.per_day) + "</div>" +
-    '<div class="callout">Sessions are counted from build 19 of the app (it reports app version, phone model and language when opened; no location). Earlier activity is counted from checks only.</div>' +
-    sec("Inventory & wishlist") + '<div class="kpis">' +
+    '<div class="callout">Sessions are counted from build 20 of the app (it reports app version, phone model and language when opened; no location). Earlier activity is counted from checks only.</div>';
+  if (key === "inventory") {
+    var vb = inv.value_by_currency || {}, val = Object.keys(vb).map(function (k) { return k + " " + n(vb[k]); }).join(" · ") || "—", vd = inv.verdicts || {};
+    return '<div class="kpis">' +
       kcard("Items in inventories", n(inv.items), n(inv.owners) + " users have items") + kcard("Value tracked", '<span style="font-size:18px">' + esc(val) + "</span>", "unsold items, middle of resale range") +
       kcard("Acted on the verdict", (inv.acted_on == null ? "—" : inv.acted_on + "%"), "items with a logged outcome") +
       kcard("Wishlist watches", n(w.watches), n(w.active) + " active · " + n(w.added) + " added · " + n(w.hits) + " price hits") + "</div>" +
-    '<div class="g2" style="margin-top:14px"><div class="card"><b>Top categories</b><div style="margin-top:10px">' + hbars(inv.categories) + '</div></div><div class="card"><b>Verdicts given</b><div style="margin-top:10px">' + hbars({ Fix: vd.fix || 0, Resell: vd.resell || 0, Keep: vd.keep || 0 }) + "</div></div></div>" +
-    '<div style="margin-top:14px">' + barChart("Wishlist watches added per day", "last 14 days", w.per_day, "#1A7F3C") + "</div>" +
-    sec("Quality & AI health") + '<div class="kpis">' +
-      kcard("Checks", n(q.checks), "quick + deep") + kcard("Failed and refunded", refundRate + "%", n(q.refunded) + " checks · " + n(q.deep_refunded) + " deep", refundRate > 10 ? "bad" : "") +
+      '<div class="g2" style="margin-top:14px"><div class="card"><b>Top categories</b><div style="margin-top:10px">' + hbars(inv.categories) + '</div></div><div class="card"><b>Verdicts given</b><div style="margin-top:10px">' + hbars({ Fix: vd.fix || 0, Resell: vd.resell || 0, Keep: vd.keep || 0 }) + "</div></div></div>";
+  }
+  if (key === "quality") { var rr = pct(q.refunded, q.checks); return '<div class="kpis">' +
+      kcard("Checks", n(q.checks), "quick + deep") + kcard("Failed and refunded", rr + "%", n(q.refunded) + " checks · " + n(q.deep_refunded) + " deep", rr > 10 ? "bad" : "") +
       kcard("Watch failures", n(q.watch_failures), "price watches that errored", q.watch_failures ? "bad" : "") +
       kcard("Refused photos", n(q.refused_photos), n(q.wrong_call_reports) + " reported as a wrong call") +
-      kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good") + "</div>" +
-    sec("Devices", "totals only, users seen in this period") + '<div class="g3"><div class="card"><b>App version</b><div style="margin-top:10px">' + hbars(dv.app_version) + '</div></div><div class="card"><b>Operating system</b><div style="margin-top:10px">' + hbars(dv.os) + '</div></div><div class="card"><b>App language</b><div style="margin-top:10px">' + hbars(dv.lang) + "</div></div></div>";
+      kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good") + "</div>"; }
+  if (key === "devices") return '<div class="g3"><div class="card"><b>App version</b><div style="margin-top:10px">' + hbars(dv.app_version) + '</div></div><div class="card"><b>Operating system</b><div style="margin-top:10px">' + hbars(dv.os) + '</div></div><div class="card"><b>App language</b><div style="margin-top:10px">' + hbars(dv.lang) + "</div></div></div>";
+  return "";
+}
+var INS_SUB = { funnel: "new sign-ups in this period", devices: "totals only, users seen in this period" };
+function insDaysSeg(opts) { var days = M.insDays || 30; return '<div class="seg">' + opts.map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="ins-days" data-v="' + x + '">' + (x === 365 ? "1 year" : x + " days") + "</button>"; }).join("") + "</div>"; }
+function vInsights() {
+  var d = M.ins, days = M.insDays || 30;
+  var head = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h1 class="h">Insights</h1><div class="sub">' + esc(proj().name) + ' · last ' + days + ' days unless a box says otherwise · open a section for the full detail</div></div>' + insDaysSeg([7, 30, 90]) + "</div>";
+  if (!d) return head + '<p class="sub">Loading…</p>';
+  return head + INS.map(function (x) {
+    if (x[0] === "ai" && !has("ai_usage")) return "";
+    var h = '<div class="shrow">' + sec(x[1], INS_SUB[x[0]]) + '<button class="b s" data-p="ins:' + x[0] + '">Full detail →</button></div>';
+    return h + (x[0] === "ai" ? vAiUsage(true) : insSummary(d, x[0]));
+  }).join("");
+}
+function lineChart(sr) {
+  var pd = sr.points || []; if (!pd.length) return "";
+  var mx = Math.max.apply(null, pd.map(function (d) { return Number(d.value); }).concat([sr.money ? 0.01 : 1])), N = pd.length, W = Math.max(8, Math.min(40, 1100 / N)), H = 120, bw = Math.max(3, W * 0.65);
+  var every = Math.ceil(N / 15), tot = pd.reduce(function (a, d) { return a + Number(d.value); }, 0);
+  var fmt = function (v) { return sr.money ? "$" + Number(v).toFixed(v < 1 ? 3 : 2) : n(v); };
+  var bars = pd.map(function (d, i) { var v = Number(d.value), h = Math.max(v ? 2 : 0, v / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="' + bw + '" height="' + h + '" rx="' + Math.min(5, bw / 3) + '" fill="' + (i === N - 1 ? "#5B2EFF" : "#C9BEFF") + '"><title>' + esc(d.day) + ": " + fmt(v) + "</title></rect>" +
+    (i % every === 0 || i === N - 1 ? '<text x="' + (i * W + bw / 2) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(5).replace("-", "/") + "</text>" : "") +
+    (v && N <= 31 ? '<text x="' + (i * W + bw / 2) + '" y="' + (H - h + 9) + '" font-size="9" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + (sr.money ? Number(v).toFixed(2) : v) + "</text>" : ""); }).join("");
+  return '<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px"><b>' + esc(sr.title) + '</b><span class="ks">total ' + fmt(tot) + " · peak " + fmt(mx === (sr.money ? 0.01 : 1) && !tot ? 0 : mx) + " · hover a bar for the day</span></div>" +
+    '<svg width="100%" height="160" viewBox="-14 0 ' + (N * W + 28) + ' 160" preserveAspectRatio="none" role="img" aria-label="' + esc(sr.title) + '">' + bars + "</svg></div>";
+}
+function cellFmt(v, type) {
+  if (v == null || v === "") return '<td class="ks">—</td>';
+  if (type === "date") return "<td>" + when(v) + "</td>";
+  if (type === "num") return '<td style="text-align:right;font-variant-numeric:tabular-nums">' + n(v) + "</td>";
+  if (type === "pct") return '<td style="text-align:right">' + v + "%</td>";
+  if (type === "usd") return '<td style="text-align:right;font-variant-numeric:tabular-nums">$' + Number(v).toFixed(Number(v) < 1 ? 4 : 2) + "</td>";
+  if (type === "tag") return '<td><span class="tag" style="background:#EEE9FF;color:#5B2EFF">' + esc(v) + "</span></td>";
+  return "<td>" + esc(v) + "</td>";
+}
+function detTable(t, i) {
+  var cols = (t.columns || []).map(function (c) { var x = String(c).split(":"); return { label: x[0], type: x[1] || "text" }; });
+  var q = ((M.idq || {})[i] || "").toLowerCase();
+  var all = t.rows || [], rows = all.filter(function (r) { return !q || r.join(" ").toLowerCase().indexOf(q) >= 0; });
+  var shown = rows.slice(0, (M.idmore || {})[i] ? 2000 : 25);
+  return '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><b>' + esc(t.title) + "</b>" + (t.note ? ' <span class="ks">' + esc(t.note) + "</span>" : "") + '</div><div style="display:flex;gap:6px"><input class="in idq" data-i="' + i + '" placeholder="Filter" value="' + esc((M.idq || {})[i] || "") + '" style="width:170px;height:30px"><button class="b s" data-a="id-csv" data-i="' + i + '">CSV</button></div></div>' +
+    '<div style="overflow:auto;margin-top:8px"><table class="tb"><tr>' + cols.map(function (c) { return "<th" + (/num|pct|usd/.test(c.type) ? ' style="text-align:right"' : "") + ">" + esc(c.label) + "</th>"; }).join("") + "</tr>" +
+    (shown.length ? shown.map(function (r) { return "<tr>" + r.map(function (v, j) { return cellFmt(v, (cols[j] || {}).type); }).join("") + "</tr>"; }).join("") : '<tr><td colspan="' + cols.length + '" class="sub">Nothing here yet.</td></tr>') + "</table></div>" +
+    '<div class="ks" style="margin-top:6px">' + n(rows.length) + (rows.length !== all.length ? " of " + n(all.length) : "") + " rows" + (rows.length > shown.length ? ' · <a href="#" data-a="id-more" data-i="' + i + '">show all</a>' : "") + "</div></div>";
+}
+function vInsDetail(key) {
+  var d = M.ins, dt = M.idet, days = M.insDays || 30;
+  var head = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><button class="b s" data-p="insights">← All insights</button><h1 class="h" style="margin-top:10px">' + esc(insTitle(key)) + '</h1><div class="sub">' + esc(proj().name) + " · last " + days + " days" + (INS_SUB[key] ? " · " + esc(INS_SUB[key]) : "") + "</div></div>" + insDaysSeg([7, 30, 90, 365]) + "</div>";
+  var top = key === "ai" ? (has("ai_usage") ? vAiUsage(true) : "") : d ? insSummary(d, key) : '<p class="sub">Loading…</p>';
+  var body = "";
+  if (!dt || dt.section !== key || dt.days !== days) body = '<p class="sub" style="margin-top:14px">Loading the detail…</p>';
+  else {
+    body = (dt.series || []).map(function (sr) { return '<div style="margin-top:14px">' + lineChart(sr) + "</div>"; }).join("") +
+      ((dt.bars || []).length ? '<div class="' + ((dt.bars || []).length >= 3 ? "g3" : "g2") + '" style="margin-top:14px">' + dt.bars.map(function (b) { return '<div class="card"><b>' + esc(b.title) + '</b><div style="margin-top:10px">' + hbars(b.items) + "</div></div>"; }).join("") + "</div>" : "") +
+      (dt.tables || []).map(detTable).join("");
+  }
+  return head + '<div style="margin-top:6px">' + top + "</div>" + body;
+}
+function loadInsDetail(key) {
+  var days = M.insDays || 30;
+  return api("insight-detail", { section: key, days: days }).then(function (j) { if (M.page === "ins:" + key && (M.insDays || 30) === days) { M.idet = j; M.idq = {}; M.idmore = {}; render(); } }).catch(function (e) { authFail(e) || toast("Couldn’t load the detail."); });
+}
+function detCsv(i) {
+  var t = M.idet && (M.idet.tables || [])[i]; if (!t) return;
+  var head = (t.columns || []).map(function (c) { return String(c).split(":")[0]; });
+  var qv = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  var csvT = [head].concat(t.rows || []).map(function (r) { return r.map(qv).join(","); }).join("\n");
+  var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csvT], { type: "text/csv" })); a.download = (proj().name + "-" + M.idet.section + "-" + t.title + "-" + new Date().toISOString().slice(0, 10)).replace(/[^\w.-]+/g, "-") + ".csv"; a.click();
 }
 function loadInsights() { if (has("ai_usage")) loadAi(); return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
 
@@ -551,9 +615,9 @@ function costChart(pd) {
   }).join("");
   return '<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><b>AI cost per day (USD)</b><span class="ks"><span class="pdot" style="background:#5B2EFF"></span> App &nbsp; <span class="pdot" style="background:#E0457B"></span> Assistant &nbsp; last 14 days</span></div><svg width="100%" height="150" viewBox="0 0 ' + (pd.length * W) + ' 150" preserveAspectRatio="xMinYMid meet" role="img" aria-label="AI cost per day">' + bars + "</svg></div>";
 }
-function vAiUsage() {
+function vAiUsage(noHead) {
   var d = M.ai;
-  if (!d) return sec("AI usage & cost") + '<p class="sub">Loading…</p>';
+  if (!d) return (noHead ? "" : sec("AI usage & cost")) + '<p class="sub">Loading…</p>';
   var m = d.month || {}, b = d.budget || {}, per = d.period || {}, tp = d.ticket_price || {}, cur = tp.currency || "MYR";
   var fx = cur === "USD" ? 1 : Number((d.fx || {})[cur] || 0);
   var cpt = d.tickets_used > 0 ? Number(d.checks_cost) / d.tickets_used : null;
@@ -570,8 +634,8 @@ function vAiUsage() {
     return "<tr><td>" + esc(k.side === "assistant" ? "Assistant · " + k.kind : AIKIND[k.kind] || k.kind) + '</td><td style="text-align:right">' + n(k.runs) + '</td><td style="text-align:right">' + usd(k.runs ? k.cost / k.runs : 0, 3) + '</td><td style="text-align:right;font-weight:700">' + usd(k.cost) + '</td><td style="text-align:right">' + n(k.tin) + " / " + n(k.tout) + '</td><td style="text-align:right">' + n(k.searches) + "</td></tr>";
   }).join("");
   var top = (d.top_users || []).map(function (u) { return '<div class="kvl"><a href="#" data-a="open-user" data-id="' + esc(u.user_id) + '">' + esc(u.email || String(u.user_id).slice(0, 8)) + "</a><b>" + usd(u.cost) + ' <span class="ks" style="font-weight:600">· ' + n(u.runs) + " checks</span></b></div>"; }).join("");
-  return sec("AI usage & cost", d.since ? "tracked since " + day(d.since) : "tracking starts with the next AI call") +
-    (mg && !edit ? '<div style="display:flex;justify-content:flex-end;margin-top:-34px;margin-bottom:10px"><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
+  return (noHead ? "" : sec("AI usage & cost", d.since ? "tracked since " + day(d.since) : "tracking starts with the next AI call")) +
+    (mg && !edit ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="ks">' + (d.since ? "Tracked since " + day(d.since) : "Tracking starts with the next AI call") + '</span><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
     '<div class="kpis" style="margin-top:0">' +
       meter("App AI this month", m.app, Number(b.app || 0), n(m.app_calls) + " AI calls from user checks, watches and alerts") +
       meter("Assistant this month", m.assistant, Number(b.assistant || 0), m.assistant_calls ? n(m.assistant_calls) + " assistant calls" : "The Moreeh assistant isn’t built yet") +
@@ -770,7 +834,7 @@ function render() {
   else if (!c || c.state === "checking") body = '<p class="sub">Connecting to ' + esc(p.name) + "…</p>";
   else if (c.state === "signin") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:520px"><b>Sign in to this project</b><p class="ks">Each app has its own admin login.</p><button class="b p" data-a="signin" data-id="' + esc(p.id) + '">Sign in to ' + esc(p.name) + "</button></div>";
   else if (c.state === "error") body = '<h1 class="h">' + esc(p.name) + '</h1><div class="card" style="margin-top:16px;max-width:620px;border-left:4px solid #B3261E"><b>' + esc(CONN_TXT[c.code] || c.code) + '</b><p class="ks">See <a href="#" data-p="help" data-sec="trouble">Troubleshooting</a>.</p><div style="display:flex;gap:8px"><button class="b" data-a="test" data-id="' + esc(p.id) + '">Try again</button><button class="b" data-a="signin" data-id="' + esc(p.id) + '">Sign in with another account</button></div></div>';
-  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : M.page === "insights" && has("insights") ? vInsights() : M.page === "users" && has("users") ? vUsers() : M.page === "safety" && has("safety") ? vSafety() : M.page === "support" && has("support") ? vSupport() : vOverview();
+  else body = M.page === "coupons" && has("coupons") ? vCoupons() : M.page === "audit" ? vAudit() : M.page === "insights" && has("insights") ? vInsights() : /^ins:/.test(M.page) && has("insights") ? vInsDetail(M.page.slice(4)) : M.page === "users" && has("users") ? vUsers() : M.page === "safety" && has("safety") ? vSafety() : M.page === "support" && has("support") ? vSupport() : vOverview();
   r.innerHTML = shell(body);
   if (M.focus) { var f = $(M.focus); if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} } M.focus = null; }
 }
@@ -781,7 +845,7 @@ function authFail(e) { if (e && (e.error === "unauthorized" || e.error === "sign
 function goPage(p, sec) {
   M.page = p; M.err = ""; M.dd = false; render();
   var c = M.conn[M.cur];
-  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
+  if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (/^ins:/.test(p)) { if (!M.ins) loadInsights(); else if (p === "ins:ai" && has("ai_usage")) loadAi(); M.idet = null; loadInsDetail(p.slice(4)); } if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
   if (p === "projects") M.projects.forEach(function (q) { if (!M.conn[q.id]) connect(q); });
   if (p === "help" && sec) setTimeout(function () { var el = $("h-" + sec); if (el) el.scrollIntoView({ behavior: "smooth" }); }, 30);
 }
@@ -821,6 +885,7 @@ document.addEventListener("submit", function (e) {
   if (f.id === "f-proj") saveProject();
 });
 document.addEventListener("input", function (e) {
+  if (e.target.classList && e.target.classList.contains("idq")) { M.idq = M.idq || {}; M.idq[e.target.dataset.i] = e.target.value; var i0 = e.target.dataset.i; render(); var el = document.querySelector('.idq[data-i="' + i0 + '"]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } return; }
   if (e.target.id === "d-q" && M.detail) { M.detail.q = e.target.value; M.focus = "d-q"; render(); }
   if (e.target.id === "p-url" && M.pform) { var u = e.target.value.trim().replace(/\/+$/, ""); var api$ = $("p-api"); if (api$ && (!api$.value || /\/functions\/v1\/moreeh$/.test(api$.value))) api$.value = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(u) ? u + "/functions/v1/moreeh" : api$.value; }
 });
@@ -852,7 +917,9 @@ document.addEventListener("click", function (e) {
   if (a === "copy-pre") { var txt = t.parentNode.textContent.replace(/^Copy/, ""); if (navigator.clipboard) navigator.clipboard.writeText(txt); toast("Copied."); }
   if (a === "logout") { e.preventDefault(); client().auth.signOut().then(function () { if (M.cur === "home") { M.conn = {}; } else { M.conn[M.cur] = { state: "signin" }; } render(); }); }
   if (a === "kind") { readForm(); M.form.kind = t.dataset.k; render(); }
-  if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; M.ai = null; render(); loadInsights(); }
+  if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; M.ai = null; render(); loadInsights(); if (/^ins:/.test(M.page)) loadInsDetail(M.page.slice(4)); }
+  if (a === "id-csv") detCsv(Number(t.dataset.i));
+  if (a === "id-more") { e.preventDefault(); M.idmore = M.idmore || {}; M.idmore[t.dataset.i] = 1; render(); }
   if (a === "ai-edit") { M.aiEdit = !M.aiEdit; render(); }
   if (a === "uf") { M.uf = t.dataset.v; M.uq = ($("u-q") || {}).value || M.uq || ""; loadUsers(); }
   if (a === "open-user") { e.preventDefault(); M.detail = null; openUser(t.dataset.id); }
