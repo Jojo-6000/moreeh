@@ -89,6 +89,8 @@ button,input,select{font:inherit;color:inherit}
 .kvl{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-top:8px}.kvl span{color:#7A6FAE}
 @media (max-width:1100px){.sup{flex-direction:column}.thl{width:auto;max-height:300px}.sup>.card[style*="width:260px"]{width:auto!important}}
 textarea.in{font-family:inherit}
+.mtr{height:10px;border-radius:5px;background:#ECE8FA;margin-top:8px;overflow:hidden}.mtr span{display:block;height:100%;border-radius:5px}
+.card.warn{border-left:4px solid #FF8A00}
 a{color:#5B2EFF}
 </style>
 </head>
@@ -158,7 +160,7 @@ function switchTo(id) {
   M.cur = id; M.dd = false; M.ov = M.coupons = M.audit = M.detail = null; M.created = null;
   try { localStorage.setItem("moreeh_cur", id); } catch (e) {}
   if (["projects", "help"].indexOf(M.page) >= 0) M.page = "overview";
-  M.ins = M.users = M.usel = M.udata = M.saf = M.sup = M.thr = null; M.supUnread = 0;
+  M.ai = M.ins = M.users = M.usel = M.udata = M.saf = M.sup = M.thr = null; M.supUnread = 0;
   connect(proj()).then(function (ok) { if (ok) goPage(has(M.page) ? M.page : "overview"); });
 }
 
@@ -212,7 +214,7 @@ function vOverview() {
     var bars = pd.map(function (d, i) { var h = Math.max(2, d.value / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="26" height="' + h + '" rx="6" fill="' + (i === pd.length - 1 ? "#5B2EFF" : "#C9BEFF") + '"><title>' + esc(d.day) + ": " + d.value + '</title></rect><text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" + (d.value ? '<text x="' + (i * W + 13) + '" y="' + (H - h + 9) + '" font-size="10" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + d.value + "</text>" : ""); }).join("");
     chart = '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between"><b>' + esc(ch.title) + '</b><span class="ks">' + esc(ch.note || "") + '</span></div><svg width="100%" height="190" viewBox="0 0 ' + (pd.length * W) + ' 190" preserveAspectRatio="xMinYMid meet" role="img" aria-label="' + esc(ch.title) + '">' + bars + "</svg></div>";
   }
-  var alerts = (o.alerts || []).map(function (a) { var go = a.page && has(a.page); return "<" + (go ? 'button data-p="' + esc(a.page) + '"' : "div") + ' class="card' + (go ? " click" : "") + '" style="display:block;width:100%;margin-top:14px;border-left:4px solid ' + (a.tone === "bad" ? "#B3261E" : "#5B2EFF") + '"><b>' + esc(a.text) + '</b><div class="ks">' + esc(a.sub || "") + "</div>" + (go ? '<div class="more">Open →</div>' : "") + "</" + (go ? "button" : "div") + ">"; }).join("");
+  var alerts = (o.alerts || []).map(function (a) { var go = a.page && has(a.page); return "<" + (go ? 'button data-p="' + esc(a.page) + '"' : "div") + ' class="card' + (go ? " click" : "") + '" style="display:block;width:100%;margin-top:14px;border-left:4px solid ' + (a.tone === "bad" ? "#B3261E" : a.tone === "warn" ? "#FF8A00" : "#5B2EFF") + '"><b>' + esc(a.text) + '</b><div class="ks">' + esc(a.sub || "") + "</div>" + (go ? '<div class="more">Open →</div>' : "") + "</" + (go ? "button" : "div") + ">"; }).join("");
   var m = me() || {};
   return '<div style="display:flex;justify-content:space-between;align-items:center"><div><h1 class="h">Hello' + (m.email ? ", " + esc(m.email.split("@")[0]) : "") + '</h1><div class="sub">' + esc(p.name) + ' · last 7 days unless noted · click a box to see the list</div></div>' + (has("coupons") ? '<button class="b l" data-p="coupons">+ New coupon</button>' : "") + "</div>" +
     '<div class="kpis">' + cards + "</div>" + chart + alerts;
@@ -447,7 +449,7 @@ function csv() {
 }
 
 /* ---------- audit ---------- */
-var ACT = { "user.add_tickets": "Added tickets", "user.remove_tickets": "Removed tickets", "user.give_plus": "Gave J@rd Plus", "user.end_plus": "Ended J@rd Plus", "user.hold": "Paused checks", "user.unhold": "Lifted hold", "user.suspend": "Suspended account", "user.unsuspend": "Unsuspended account", "user.reset_login": "Sent password reset", "user.note": "Added note", "user.delete": "Deleted account",
+var ACT = { "ai.settings": "Changed AI budgets / ticket price", "user.add_tickets": "Added tickets", "user.remove_tickets": "Removed tickets", "user.give_plus": "Gave J@rd Plus", "user.end_plus": "Ended J@rd Plus", "user.hold": "Paused checks", "user.unhold": "Lifted hold", "user.suspend": "Suspended account", "user.unsuspend": "Unsuspended account", "user.reset_login": "Sent password reset", "user.note": "Added note", "user.delete": "Deleted account",
   "safety.clear": "Cleared safety hold", "safety.ask": "Asked user about a photo", "safety.suspend_report": "Suspended after safety review", "support.reply": "Replied to support", "support.note": "Internal support note", "support.status": "Changed support status", "coupon.create": "Created coupon", "coupon.on": "Switched coupon on", "coupon.off": "Switched coupon off", "project.add": "Added project", "project.update": "Edited project", "project.remove": "Removed project" };
 function vAudit() {
   var a = M.audit, myId = M.uid && M.uid[M.cur];
@@ -503,6 +505,7 @@ function vInsights() {
       kcard("Coupon tickets", n(s.coupon_tickets) + " ◆", n(f.coupon_users) + " users redeemed · " + n(f.coupon_then_bought) + " bought later") +
       kcard("Refunded checks", n(s.refunds), "tickets given back when a check failed") + "</div>" +
     (s.test_orders && s.test_orders === s.orders ? '<div class="callout" style="margin-top:12px">All orders so far are test top-ups (payments aren’t switched on yet), so sales numbers are for testing only.</div>' : "") +
+    (has("ai_usage") ? vAiUsage() : "") +
     sec("Free-ticket funnel", "new sign-ups in this period") + '<div class="card">' + funnel +
       '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + "</b></div></div>" +
     sec("Engagement & retention") + '<div class="kpis">' +
@@ -527,7 +530,67 @@ function vInsights() {
       kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good") + "</div>" +
     sec("Devices", "totals only, users seen in this period") + '<div class="g3"><div class="card"><b>App version</b><div style="margin-top:10px">' + hbars(dv.app_version) + '</div></div><div class="card"><b>Operating system</b><div style="margin-top:10px">' + hbars(dv.os) + '</div></div><div class="card"><b>App language</b><div style="margin-top:10px">' + hbars(dv.lang) + "</div></div></div>";
 }
-function loadInsights() { return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
+function loadInsights() { if (has("ai_usage")) loadAi(); return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
+
+/* ---------- AI usage & cost ---------- */
+var AIKIND = { "quick:decide": "Quick check · fix / resell / keep", "quick:price": "Quick price check", deep: "Deep check (agents + live listings)", watch: "Wishlist price watch", price_alert: "Plus weekly price alert", econ: "Monthly economy refresh" };
+function usd(x, d) { x = Number(x || 0); return "$" + (x !== 0 && Math.abs(x) < 0.01 ? x.toFixed(4) : x.toFixed(d == null ? 2 : d)); }
+function meter(label, used, cap, sub) {
+  var p = cap > 0 ? Math.min(100, used / cap * 100) : 0, col = p >= 100 ? "#B3261E" : p >= 80 ? "#FF8A00" : "#5B2EFF";
+  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kl">' + esc(label.toUpperCase()) + '</span><span class="ks">' + (cap > 0 ? Math.round(used / cap * 100) + "% of " + usd(cap, 0) : "no budget set") + '</span></div><div class="kv">' + usd(used) + '</div><div class="mtr" role="meter" aria-valuemin="0" aria-valuemax="' + cap + '" aria-valuenow="' + Number(used).toFixed(2) + '" aria-label="' + esc(label) + '"><span style="width:' + p + "%;background:" + col + '"></span></div><div class="ks" style="margin-top:6px">' + esc(sub) + "</div></div>";
+}
+function costChart(pd) {
+  if (!pd || !pd.length) return "";
+  var mx = Math.max.apply(null, pd.map(function (d) { return Number(d.app) + Number(d.assistant); }).concat([0.01])), W = 40, H = 110;
+  var bars = pd.map(function (d, i) {
+    var a = Number(d.app), s = Number(d.assistant), ha = a / mx * H, hs = s / mx * H, y = H + 14;
+    return '<rect x="' + (i * W) + '" y="' + (y - ha) + '" width="26" height="' + Math.max(ha, a ? 2 : 0) + '" rx="4" fill="#5B2EFF"><title>' + d.day + " app " + usd(a) + '</title></rect>' +
+      (s ? '<rect x="' + (i * W) + '" y="' + (y - ha - hs) + '" width="26" height="' + hs + '" rx="4" fill="#E0457B"><title>' + d.day + " assistant " + usd(s) + "</title></rect>" : "") +
+      '<text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" +
+      (a + s ? '<text x="' + (i * W + 13) + '" y="' + (y - ha - hs - 4) + '" font-size="9" font-weight="700" fill="#1A0B5C" text-anchor="middle">' + (a + s < 1 ? (a + s).toFixed(2).slice(1) : (a + s).toFixed(1)) + "</text>" : "");
+  }).join("");
+  return '<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><b>AI cost per day (USD)</b><span class="ks"><span class="pdot" style="background:#5B2EFF"></span> App &nbsp; <span class="pdot" style="background:#E0457B"></span> Assistant &nbsp; last 14 days</span></div><svg width="100%" height="150" viewBox="0 0 ' + (pd.length * W) + ' 150" preserveAspectRatio="xMinYMid meet" role="img" aria-label="AI cost per day">' + bars + "</svg></div>";
+}
+function vAiUsage() {
+  var d = M.ai;
+  if (!d) return sec("AI usage & cost") + '<p class="sub">Loading…</p>';
+  var m = d.month || {}, b = d.budget || {}, per = d.period || {}, tp = d.ticket_price || {}, cur = tp.currency || "MYR";
+  var fx = cur === "USD" ? 1 : Number((d.fx || {})[cur] || 0);
+  var cpt = d.tickets_used > 0 ? Number(d.checks_cost) / d.tickets_used : null;
+  var cptLocal = cpt != null && fx ? cpt * fx : null;
+  var margin = cptLocal != null && tp.amount ? Math.round((1 - cptLocal / tp.amount) * 100) : null;
+  var mg = canManage(), edit = M.aiEdit;
+  var settings = edit ? '<form class="card" id="f-ai" style="margin-top:14px"><b>Budgets and ticket price</b><div class="row2" style="margin-top:4px">' +
+      '<div><label class="lab" for="ai-ba">APP AI BUDGET (USD / MONTH)</label><input class="in" id="ai-ba" type="number" min="0" step="1" value="' + esc(b.app == null ? "" : b.app) + '"></div>' +
+      '<div><label class="lab" for="ai-bs">ASSISTANT BUDGET (USD / MONTH)</label><input class="in" id="ai-bs" type="number" min="0" step="1" value="' + esc(b.assistant == null ? "" : b.assistant) + '"></div>' +
+      '<div><label class="lab" for="ai-tp">PLANNED PRICE PER TICKET</label><div style="display:flex;gap:6px"><select class="in" id="ai-tc" style="width:90px">' + ["MYR", "USD", "SGD", "IDR", "THB", "PHP"].map(function (c) { return "<option" + (c === cur ? " selected" : "") + ">" + c + "</option>"; }).join("") + '</select><input class="in" id="ai-tp" type="number" min="0" step="0.01" placeholder="not set" value="' + esc(tp.amount == null ? "" : tp.amount) + '"></div></div></div>' +
+      '<p class="ks" style="margin:10px 0 0">Budgets drive the meters and the Overview alert at 80%. To hard-stop spend, also set a spending limit for the API key’s workspace in the Anthropic Console.</p>' +
+      '<div style="display:flex;gap:8px;margin-top:12px"><button class="b p">Save</button><button type="button" class="b" data-a="ai-edit">Cancel</button></div></form>' : "";
+  var kinds = (d.by_kind || []).map(function (k) {
+    return "<tr><td>" + esc(k.side === "assistant" ? "Assistant · " + k.kind : AIKIND[k.kind] || k.kind) + '</td><td style="text-align:right">' + n(k.runs) + '</td><td style="text-align:right">' + usd(k.runs ? k.cost / k.runs : 0, 3) + '</td><td style="text-align:right;font-weight:700">' + usd(k.cost) + '</td><td style="text-align:right">' + n(k.tin) + " / " + n(k.tout) + '</td><td style="text-align:right">' + n(k.searches) + "</td></tr>";
+  }).join("");
+  var top = (d.top_users || []).map(function (u) { return '<div class="kvl"><a href="#" data-a="open-user" data-id="' + esc(u.user_id) + '">' + esc(u.email || String(u.user_id).slice(0, 8)) + "</a><b>" + usd(u.cost) + ' <span class="ks" style="font-weight:600">· ' + n(u.runs) + " checks</span></b></div>"; }).join("");
+  return sec("AI usage & cost", d.since ? "tracked since " + day(d.since) : "tracking starts with the next AI call") +
+    (mg && !edit ? '<div style="display:flex;justify-content:flex-end;margin-top:-34px;margin-bottom:10px"><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
+    '<div class="kpis" style="margin-top:0">' +
+      meter("App AI this month", m.app, Number(b.app || 0), n(m.app_calls) + " AI calls from user checks, watches and alerts") +
+      meter("Assistant this month", m.assistant, Number(b.assistant || 0), m.assistant_calls ? n(m.assistant_calls) + " assistant calls" : "The Moreeh assistant isn’t built yet") +
+      kcard("AI cost per ticket", cpt == null ? "—" : usd(cpt, 3), cpt == null ? "no tickets used since tracking began" : (cptLocal != null && cur !== "USD" ? "≈ " + cur + " " + cptLocal.toFixed(3) + " · " : "") + n(d.tickets_used) + " tickets used") +
+      kcard("Margin per ticket", margin == null ? "—" : margin + "%", tp.amount ? "at " + cur + " " + Number(tp.amount).toFixed(2) + " per ticket, AI cost only" : "set a planned ticket price to see this", margin != null && margin < 50 ? "bad" : margin != null ? "good" : "") + "</div>" +
+    settings +
+    '<div style="margin-top:14px">' + costChart(d.per_day) + "</div>" +
+    '<div class="g2" style="margin-top:14px;align-items:start"><div class="card" style="overflow:auto"><b>Where it went</b> <span class="ks">last ' + (d.days || 30) + ' days · ' + usd(Number(per.app) + Number(per.assistant)) + ' total</span><table class="tb" style="margin-top:6px"><tr><th>What</th><th style="text-align:right">Runs</th><th style="text-align:right">Avg / run</th><th style="text-align:right">Total</th><th style="text-align:right">Tokens in / out</th><th style="text-align:right">Searches</th></tr>' +
+      (kinds || '<tr><td colspan="6" class="sub">No AI calls logged yet.</td></tr>') + "</table>" + (per.unpriced ? '<p class="err">' + n(per.unpriced) + " calls used a model with no price set. Add it to the ai_prices table in Supabase.</p>" : "") + "</div>" +
+      '<div class="card"><b>Heaviest users</b> <span class="ks">AI cost, last ' + (d.days || 30) + " days</span>" + (top || '<p class="ks">No data yet.</p>') +
+      '<div class="kl" style="margin-top:14px">PRICES USED (USD PER MILLION TOKENS)</div>' + (d.prices || []).map(function (p) { return '<div class="kvl"><span>' + esc(p.model) + "</span><b>" + usd(p.input_per_mtok) + " in · " + usd(p.output_per_mtok) + " out</b></div>"; }).join("") +
+      '<div class="ks" style="margin-top:6px">Web search ' + usd(((d.prices || [])[0] || {}).search_per_k || 10, 0) + " per 1,000. Estimates: your Anthropic invoice is the final word.</div></div></div>";
+}
+function loadAi() { return api("ai-usage", { days: M.insDays || 30 }).then(function (j) { M.ai = j; render(); }).catch(function () {}); }
+function saveAi() {
+  var v = function (id) { var e = $(id); return e ? e.value : ""; };
+  api("ai-settings", { budget_app: v("ai-ba"), budget_assistant: v("ai-bs"), ticket_price: { amount: v("ai-tp"), currency: v("ai-tc") } })
+    .then(function () { M.aiEdit = false; toast("Saved."); loadAi(); }).catch(function (e) { toast(e && e.error === "not_allowed" ? "Your role can’t change this." : "Couldn’t save."); });
+}
 
 /* ---------- users ---------- */
 var UFILTERS = [["all", "All"], ["new", "New this week"], ["plus", "Plus"], ["hold", "On hold"], ["suspended", "Suspended"]];
@@ -751,6 +814,7 @@ document.addEventListener("submit", function (e) {
     });
   }
   if (f.id === "f-coupon") createCoupon();
+  if (f.id === "f-ai") saveAi();
   if (f.id === "f-uq") { M.uq = ($("u-q") || {}).value || ""; loadUsers(); }
   if (f.id === "f-note") userAction("note");
   if (f.id === "f-reply") sendReply((e.submitter && e.submitter.dataset.v) || "waiting");
@@ -788,7 +852,8 @@ document.addEventListener("click", function (e) {
   if (a === "copy-pre") { var txt = t.parentNode.textContent.replace(/^Copy/, ""); if (navigator.clipboard) navigator.clipboard.writeText(txt); toast("Copied."); }
   if (a === "logout") { e.preventDefault(); client().auth.signOut().then(function () { if (M.cur === "home") { M.conn = {}; } else { M.conn[M.cur] = { state: "signin" }; } render(); }); }
   if (a === "kind") { readForm(); M.form.kind = t.dataset.k; render(); }
-  if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; render(); loadInsights(); }
+  if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; M.ai = null; render(); loadInsights(); }
+  if (a === "ai-edit") { M.aiEdit = !M.aiEdit; render(); }
   if (a === "uf") { M.uf = t.dataset.v; M.uq = ($("u-q") || {}).value || M.uq || ""; loadUsers(); }
   if (a === "open-user") { e.preventDefault(); M.detail = null; openUser(t.dataset.id); }
   if (a === "close-user") { M.usel = null; M.udata = null; if (!M.users) loadUsers(); else render(); }
