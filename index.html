@@ -49,10 +49,10 @@ button,input,select{font:inherit;color:inherit}
 .codes{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#F4F2FB;border-radius:12px;padding:12px;max-height:180px;overflow:auto;white-space:pre}
 .err{color:#B3261E;font-size:12.5px;margin-top:10px}
 @media (max-width:900px){.side{display:none}.main{padding:16px}}
-.card.click{cursor:pointer;text-align:left;border:0;font:inherit;color:inherit;transition:transform .12s,box-shadow .12s}
+.card.click{display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;cursor:pointer;text-align:left;border:0;font:inherit;color:inherit;transition:transform .12s,box-shadow .12s}
 .card.click:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(26,11,92,.12)}
 .card.click:focus-visible{outline:2px solid #5B2EFF;outline-offset:2px}
-.card.click .more{font-size:11px;font-weight:700;color:#5B2EFF;margin-top:8px}
+.card.click .more{font-size:11px;font-weight:700;color:#5B2EFF;margin-top:auto;padding-top:8px}
 .bad .kv{color:#B3261E}.good .kv{color:#1A7F3C}
 .panel-bg{position:fixed;inset:0;background:rgba(26,11,92,.35);z-index:8;display:flex;justify-content:flex-end}
 .panel{width:min(760px,100%);height:100%;background:#fff;box-shadow:-10px 0 30px rgba(26,11,92,.2);padding:22px 24px;overflow:auto}
@@ -128,6 +128,7 @@ a{color:#5B2EFF}
 .con{border:1px solid #E3DCFF}.conh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.conh .ks{max-width:560px;margin-top:4px}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:#EEEAFB;color:#5B4C99;vertical-align:2px}.pill.on{background:#E3F6E8;color:#1A7F3C}.pill.off{background:#FFF1DB;color:#8A5300}.pill.bad{background:#FDE7E7;color:#B3261E}
 .consteps{margin:12px 0 14px;padding-left:20px;font-size:13px;line-height:1.55;color:#3A2F6B}.consteps li{margin-bottom:6px}.con code{background:#F1EEFC;padding:1px 6px;border-radius:5px;font-size:12px}
+.fcl{cursor:pointer;transition:transform .12s,box-shadow .12s}.fcl:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(26,11,92,.12)}.fcl:focus-visible{outline:2px solid #5B2EFF;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -269,7 +270,8 @@ function vOverview() {
 /* ---------- drill-down panel ---------- */
 function vDetail() {
   var d = M.detail, body;
-  if (d.loading) body = '<p class="sub">Loading…</p>';
+  if (d.kind === "ins" && !d.loading && !d.error) body = insBoxBody(d);
+  else if (d.loading) body = '<p class="sub">Loading…</p>';
   else if (d.error) body = '<div class="err">Couldn’t load this list (' + esc(d.error) + ").</div>";
   else {
     var cols = (d.data.columns || []).map(function (c) { var x = String(c).split(":"); return { label: x[0], type: x[1] || "text" }; });
@@ -288,7 +290,7 @@ function vDetail() {
       (rows.length ? rows.map(function (r) { return "<tr>" + r.map(function (v, i) { return cell(v, cols[i] || {}); }).join("") + "</tr>"; }).join("") : '<tr><td colspan="' + cols.length + '" class="sub">Nothing here yet.</td></tr>') + "</table></div>";
   }
   return '<div class="panel-bg" data-a="close-detail"><div class="panel" role="dialog" aria-modal="true" aria-label="' + esc(d.title) + '" data-stop="1">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center"><h2 class="h" style="font-size:20px">' + esc((d.data && d.data.title) || d.title) + '</h2><button class="b" data-a="close-detail" aria-label="Close">✕ Close</button></div>' + body + "</div></div>";
+    '<div style="display:flex;justify-content:space-between;align-items:center"><h2 class="h" style="font-size:20px">' + esc((d.kind !== "ins" && d.data && d.data.title) || d.title) + '</h2><button class="b" data-a="close-detail" aria-label="Close">✕ Close</button></div>' + body + "</div></div>";
 }
 function openDetail(kind, label) {
   M.detail = { kind: kind, title: label, loading: true }; render();
@@ -518,7 +520,13 @@ function barChart(title, note, pd, color) {
   var bars = pd.map(function (d, i) { var h = Math.max(2, d.value / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="26" height="' + h + '" rx="6" fill="' + (i === pd.length - 1 ? (color || "#5B2EFF") : "#C9BEFF") + '"><title>' + esc(d.day) + ": " + d.value + '</title></rect><text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" + (d.value ? '<text x="' + (i * W + 13) + '" y="' + (H - h + 9) + '" font-size="10" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + d.value + "</text>" : ""); }).join("");
   return '<div class="card"><div style="display:flex;justify-content:space-between"><b>' + esc(title) + '</b><span class="ks">' + esc(note || "") + '</span></div><svg width="100%" height="160" viewBox="0 0 ' + (pd.length * W) + ' 160" preserveAspectRatio="xMinYMid meet" role="img" aria-label="' + esc(title) + '">' + bars + "</svg></div>";
 }
-function kcard(label, value, sub, tone) { return '<div class="card' + (tone ? " " + tone : "") + '"><div class="kl">' + esc(String(label).toUpperCase()) + '</div><div class="kv">' + value + '</div><div class="ks">' + esc(sub || "") + "</div></div>"; }
+function kcard(label, value, sub, tone, go) {
+  var inner = '<div class="kl">' + esc(String(label).toUpperCase()) + '</div><div class="kv">' + value + '</div><div class="ks">' + esc(sub || "") + "</div>";
+  if (!go) return '<div class="card' + (tone ? " " + tone : "") + '">' + inner + "</div>";
+  var at = go.p ? ' data-p="' + esc(go.p) + '"' + (go.sec ? ' data-sec="' + esc(go.sec) + '"' : "") : ' data-a="ins-box" data-s="' + esc(go.s) + '" data-pick="' + esc(go.pick.join("|")) + '" data-t="' + esc(label) + '"';
+  return '<button class="card click' + (tone ? " " + tone : "") + '"' + at + ' aria-label="' + esc(label + ". Show the detail") + '">' + inner + '<div class="more">' + (go.p ? "Open →" : "See the detail →") + "</div></button>";
+}
+function IB(s, pick) { return { s: s, pick: pick }; }
 function hbars(obj, total, fmt) {
   var rows = Array.isArray(obj) ? obj.map(function (x) { return [x.name, x.n]; }) : Object.keys(obj || {}).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
   if (!rows.length) return '<p class="ks">No data yet.</p>';
@@ -533,41 +541,42 @@ function insTitle(k) { for (var i = 0; i < INS.length; i++) if (INS[i][0] === k)
 function insSummary(d, key) {
   var s = d.sales || {}, f = d.funnel || {}, e = d.engagement || {}, inv = d.inventory || {}, w = d.wishlist || {}, q = d.quality || {}, dv = d.devices || {};
   if (key === "sales") return '<div class="kpis">' +
-      kcard("Tickets sold", n(s.tickets_sold) + " ◆", n(s.orders) + " orders" + (s.test_orders ? " · " + n(s.test_orders) + " test (no payment)" : "")) +
-      kcard("J@rd Plus", n(s.plus_active), "active right now") +
-      kcard("Paying users", pct(f.bought, f.signed_up) + "%", n(f.bought) + " of " + n(f.signed_up) + " new sign-ups bought") +
-      kcard("Coupon tickets", n(s.coupon_tickets) + " ◆", n(f.coupon_users) + " users redeemed · " + n(f.coupon_then_bought) + " bought later") +
-      kcard("Refunded checks", n(s.refunds), "tickets given back when a check failed") + "</div>" +
+      kcard("Tickets sold", n(s.tickets_sold) + " ◆", n(s.orders) + " orders" + (s.test_orders ? " · " + n(s.test_orders) + " test (no payment)" : ""), "", IB("sales", ["Tickets sold per day", "Orders by pack size", "Orders"])) +
+      kcard("J@rd Plus", n(s.plus_active), "active right now", "", IB("sales", ["J@rd Plus members"])) +
+      kcard("Paying users", pct(f.bought, f.signed_up) + "%", n(f.bought) + " of " + n(f.signed_up) + " new sign-ups bought", "", IB("funnel", ["Weekly sign-up groups", "Out of free tickets, not bought yet"])) +
+      kcard("Coupon tickets", n(s.coupon_tickets) + " ◆", n(f.coupon_users) + " users redeemed · " + n(f.coupon_then_bought) + " bought later", "", IB("sales", ["Coupon tickets given per day", "Where free tickets came from", "Coupon campaigns"])) +
+      kcard("Refunded checks", n(s.refunds), "tickets given back when a check failed", "", IB("quality", ["Failed and refunded checks per day", "Refunded checks"])) + "</div>" +
     (s.test_orders && s.test_orders === s.orders ? '<div class="callout" style="margin-top:12px">All orders so far are test top-ups (payments aren’t switched on yet), so sales numbers are for testing only.</div>' : "");
   if (key === "funnel") {
     var steps = [["Signed up", f.signed_up], ["Did a first check", f.first_check], ["Used all 5 free tickets", f.used_all_free], ["Bought tickets or Plus", f.bought]];
-    return '<div class="card">' + steps.map(function (st, i) {
+    return '<button class="card click" style="width:100%" data-a="ins-box" data-s="funnel" data-pick="Weekly sign-up groups|Signed up but never checked|Out of free tickets, not bought yet|Time from sign-up to first check" data-t="Sign-up funnel">' + steps.map(function (st, i) {
       var base = steps[0][1] || 0, prev = i ? steps[i - 1][1] : base;
       return '<div class="fn"><span class="fnl">' + esc(st[0]) + '</span><span class="hbt" style="height:26px;border-radius:8px"><span style="width:' + (base ? Math.max(2, (st[1] || 0) / base * 100) : 2) + '%;border-radius:8px"></span></span><b>' + n(st[1]) + '</b><span class="ks" style="width:120px">' + (i ? pct(st[1], prev) + "% of the step before" : "") + "</span></div>";
-    }).join("") + '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + "</b></div></div>";
+    }).join("") + '<div class="ks" style="margin-top:10px">Median time from sign-up to first check: <b>' + (f.median_mins_to_first_check == null ? "—" : f.median_mins_to_first_check < 60 ? f.median_mins_to_first_check + " min" : (f.median_mins_to_first_check / 60).toFixed(1) + " h") + '</b></div><div class="more">See who’s stuck at each step →</div></button>';
   }
   if (key === "engagement") return '<div class="kpis">' +
-      kcard("Daily active", n(e.dau), "last 24 hours") + kcard("Weekly active", n(e.wau), "last 7 days") + kcard("Monthly active", n(e.mau), "last 30 days") +
-      kcard("Stickiness", pct(e.dau, e.mau) + "%", "daily ÷ monthly active") + "</div>" +
+      kcard("Daily active", n(e.dau), "last 24 hours", "", IB("engagement", ["Active users per day", "Most active users"])) + kcard("Weekly active", n(e.wau), "last 7 days", "", IB("engagement", ["Active users per day", "Most active users"])) + kcard("Monthly active", n(e.mau), "last 30 days", "", IB("engagement", ["Active users per day", "Most active users"])) +
+      kcard("Stickiness", pct(e.dau, e.mau) + "%", "daily ÷ monthly active", "", IB("engagement", ["Active users per day", "Busiest hours (Malaysia time)"])) + "</div>" +
     '<div class="kpis">' +
-      kcard("Day 1 return", e.d1 == null ? "—" : e.d1 + "%", "came back a day after joining") + kcard("Day 7 return", e.d7 == null ? "—" : e.d7 + "%", "came back a week later") + kcard("Day 30 return", e.d30 == null ? "—" : e.d30 + "%", "came back a month later") +
-      kcard("Sessions", n(e.sessions), "avg " + (e.avg_session_mins == null ? "—" : e.avg_session_mins + " min") + " · median " + (e.median_session_mins == null ? "—" : e.median_session_mins + " min")) +
-      kcard("Checks per active user", e.checks_per_active == null ? "—" : e.checks_per_active, "in this period") + "</div>" +
+      kcard("Day 1 return", e.d1 == null ? "—" : e.d1 + "%", "came back a day after joining", "", IB("engagement", ["Return rate by sign-up week"])) + kcard("Day 7 return", e.d7 == null ? "—" : e.d7 + "%", "came back a week later", "", IB("engagement", ["Return rate by sign-up week"])) + kcard("Day 30 return", e.d30 == null ? "—" : e.d30 + "%", "came back a month later", "", IB("engagement", ["Return rate by sign-up week"])) +
+      kcard("Sessions", n(e.sessions), "avg " + (e.avg_session_mins == null ? "—" : e.avg_session_mins + " min") +  " · median " + (e.median_session_mins == null ? "—" : e.median_session_mins + " min"), "", IB("engagement", ["Sessions per day", "Session length", "Busiest hours (Malaysia time)"])) +
+      kcard("Checks per active user", e.checks_per_active == null ? "—" : e.checks_per_active, "in this period", "", IB("engagement", ["Checks per day", "Checks by type"])) + "</div>" +
     '<div class="callout">Sessions are counted from build 20 of the app (it reports app version, phone model and language when opened; no location). Earlier activity is counted from checks only.</div>';
   if (key === "inventory") {
     var vb = inv.value_by_currency || {}, val = Object.keys(vb).map(function (k) { return k + " " + n(vb[k]); }).join(" · ") || "—", vd = inv.verdicts || {};
     return '<div class="kpis">' +
-      kcard("Items in inventories", n(inv.items), n(inv.owners) + " users have items") + kcard("Value tracked", '<span style="font-size:18px">' + esc(val) + "</span>", "unsold items, middle of resale range") +
-      kcard("Acted on the verdict", (inv.acted_on == null ? "—" : inv.acted_on + "%"), "items with a logged outcome") +
-      kcard("Wishlist watches", n(w.watches), n(w.active) + " active · " + n(w.added) + " added · " + n(w.hits) + " price hits") + "</div>" +
-      '<div class="g2" style="margin-top:14px"><div class="card"><b>Top categories</b><div style="margin-top:10px">' + hbars(inv.categories) + '</div></div><div class="card"><b>Verdicts given</b><div style="margin-top:10px">' + hbars({ Fix: vd.fix || 0, Resell: vd.resell || 0, Keep: vd.keep || 0 }) + "</div></div></div>";
+      kcard("Items in inventories", n(inv.items), n(inv.owners) + " users have items", "", IB("inventory", ["Items added per day", "Categories"])) + kcard("Value tracked", '<span style="font-size:18px">' + esc(val) + "</span>", "unsold items, middle of resale range", "", IB("inventory", ["Most valuable items tracked"])) +
+      kcard("Acted on the verdict", (inv.acted_on == null ? "—" : inv.acted_on + "%"), "items with a logged outcome", "", IB("inventory", ["What people did after the verdict"])) +
+      kcard("Wishlist watches", n(w.watches), n(w.active) + " active · " + n(w.added) + " added · " + n(w.hits) + " price hits", "", IB("inventory", ["Wishlist watches added per day", "Watch status", "Wishlist watches", "Most watched items"])) + "</div>" +
+      '<div class="g2" style="margin-top:14px"><button class="card click" data-a="ins-box" data-s="inventory" data-pick="Categories" data-t="Top categories"><b>Top categories</b><div style="margin-top:10px">' + hbars(inv.categories) + '</div><div class="more">See the detail →</div></button><button class="card click" data-a="ins-box" data-s="inventory" data-pick="Categories|What people did after the verdict" data-t="Verdicts given"><b>Verdicts given</b><div style="margin-top:10px">' + hbars({ Fix: vd.fix || 0, Resell: vd.resell || 0, Keep: vd.keep || 0 }) + '</div><div class="more">See the detail →</div></button></div>';
   }
   if (key === "quality") { var rr = pct(q.refunded, q.checks); return '<div class="kpis">' +
-      kcard("Checks", n(q.checks), "quick + deep") + kcard("Failed and refunded", rr + "%", n(q.refunded) + " checks · " + n(q.deep_refunded) + " deep", rr > 10 ? "bad" : "") +
-      kcard("Watch failures", n(q.watch_failures), "price watches that errored", q.watch_failures ? "bad" : "") +
-      kcard("Refused photos", n(q.refused_photos), n(q.wrong_call_reports) + " reported as a wrong call") +
-      kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good") + "</div>"; }
-  if (key === "devices") return '<div class="g3"><div class="card"><b>App version</b><div style="margin-top:10px">' + hbars(dv.app_version) + '</div></div><div class="card"><b>Operating system</b><div style="margin-top:10px">' + hbars(dv.os) + '</div></div><div class="card"><b>App language</b><div style="margin-top:10px">' + hbars(dv.lang) + "</div></div></div>";
+      kcard("Checks", n(q.checks), "quick + deep", "", IB("engagement", ["Checks per day", "Checks by type"])) + kcard("Failed and refunded", rr + "%", n(q.refunded) + " checks · " + n(q.deep_refunded) + " deep", rr > 10 ? "bad" : "", IB("quality", ["Failed and refunded checks per day", "Refunded checks"])) +
+      kcard("Watch failures", n(q.watch_failures), "price watches that errored", q.watch_failures ? "bad" : "", IB("quality", ["Price watch failures"])) +
+      kcard("Refused photos", n(q.refused_photos), n(q.wrong_call_reports) + " reported as a wrong call", "", IB("quality", ["Refused photos per day", "Refused photos by reason", "“Wrong call” reports from users"])) +
+      kcard("Open support", n(q.support_open), "not solved yet", q.support_open ? "" : "good", IB("quality", ["Support requests by topic", "Support response times"])) + "</div>"; }
+  if (key === "devices") { var dc = function (t, items, pick) { return '<button class="card click" data-a="ins-box" data-s="devices" data-pick="' + esc(pick) + '" data-t="' + esc(t) + '"><b>' + esc(t) + '</b><div style="margin-top:10px">' + hbars(items) + '</div><div class="more">See the detail →</div></button>'; };
+    return '<div class="g3">' + dc("App version", dv.app_version, "App versions|Phone models") + dc("Operating system", dv.os, "Operating system|Operating system versions") + dc("App language", dv.lang, "App language|Platform") + "</div>"; }
   return "";
 }
 var INS_SUB = { funnel: "new sign-ups in this period", devices: "totals only, users seen in this period" };
@@ -629,21 +638,41 @@ function loadInsDetail(key) {
   var days = M.insDays || 30;
   return api("insight-detail", { section: key, days: days }).then(function (j) { if (M.page === "ins:" + key && (M.insDays || 30) === days) { M.idet = j; M.idq = {}; M.idmore = {}; render(); } }).catch(function (e) { authFail(e) || toast("Couldn’t load the detail."); });
 }
+
+function openInsBox(sec, pick, title) {
+  var days = M.insDays || 30, key = sec + ":" + days;
+  M.idq = M.idq || {}; M.idmore = M.idmore || {};
+  Object.keys(M.idq).forEach(function (k) { if (k[0] === "p") delete M.idq[k]; }); Object.keys(M.idmore).forEach(function (k) { if (k[0] === "p") delete M.idmore[k]; });
+  M.idc = M.idc || {};
+  M.detail = { kind: "ins", sec: sec, pick: pick, title: title, data: M.idc[key] || null, loading: !M.idc[key] }; render();
+  if (M.idc[key]) return;
+  api("insight-detail", { section: sec, days: days }).then(function (j) { M.idc[key] = j; if (M.detail && M.detail.kind === "ins" && M.detail.sec === sec) { M.detail.data = j; M.detail.loading = false; render(); } })
+    .catch(function (e) { if (M.detail) { M.detail.loading = false; M.detail.error = (e && e.error) || "error"; render(); } });
+}
+function insBoxBody(d) {
+  var dt = d.data || {}, want = d.pick, has_ = function (t) { return want.indexOf(t.title) >= 0; };
+  var ser = (dt.series || []).filter(has_), bars = (dt.bars || []).filter(has_), out = "";
+  out += ser.map(function (sr) { return '<div style="margin-top:14px">' + lineChart(sr) + "</div>"; }).join("");
+  if (bars.length) out += '<div class="' + (bars.length >= 2 ? "g2" : "") + '" style="margin-top:14px">' + bars.map(function (b) { return '<div class="card"><b>' + esc(b.title) + '</b><div style="margin-top:10px">' + hbars(b.items) + "</div></div>"; }).join("") + "</div>";
+  (dt.tables || []).forEach(function (t, i) { if (has_(t)) out += detTable(t, "p" + i); });
+  return (out || '<p class="sub" style="margin-top:14px">Nothing to show for this yet.</p>') +
+    '<div style="margin-top:16px"><button class="b s" data-p="ins:' + esc(d.sec) + '">Open the full ' + esc(insTitle(d.sec)) + " page →</button></div>";
+}
 function detCsv(i) {
-  var t = M.idet && (M.idet.tables || [])[i]; if (!t) return;
+  var t = String(i)[0] === "p" ? M.detail && M.detail.data && (M.detail.data.tables || [])[Number(String(i).slice(1))] : M.idet && (M.idet.tables || [])[i]; if (!t) return;
   var head = (t.columns || []).map(function (c) { return String(c).split(":")[0]; });
   var qv = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   var csvT = [head].concat(t.rows || []).map(function (r) { return r.map(qv).join(","); }).join("\n");
   var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csvT], { type: "text/csv" })); a.download = (proj().name + "-" + M.idet.section + "-" + t.title + "-" + new Date().toISOString().slice(0, 10)).replace(/[^\w.-]+/g, "-") + ".csv"; a.click();
 }
-function loadInsights() { if (has("ai_usage")) loadAi(); return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
+function loadInsights() { M.idc = {}; if (has("ai_usage")) loadAi(); return api("insights", { days: M.insDays || 30 }).then(function (j) { M.ins = j; render(); }).catch(function (e) { authFail(e) || toast("Couldn’t load insights."); }); }
 
 /* ---------- AI usage & cost ---------- */
 var AIKIND = { "quick:decide": "Quick check · fix / resell / keep", "quick:price": "Quick price check", deep: "Deep check (agents + live listings)", watch: "Wishlist price watch", price_alert: "Plus weekly price alert", econ: "Monthly economy refresh" };
 function usd(x, d) { x = Number(x || 0); return "$" + (x !== 0 && Math.abs(x) < 0.01 ? x.toFixed(4) : x.toFixed(d == null ? 2 : d)); }
-function meter(label, used, cap, sub) {
+function meter(label, used, cap, sub, go) {
   var p = cap > 0 ? Math.min(100, used / cap * 100) : 0, col = p >= 100 ? "#B3261E" : p >= 80 ? "#FF8A00" : "#5B2EFF";
-  return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kl">' + esc(label.toUpperCase()) + '</span><span class="ks">' + (cap > 0 ? Math.round(used / cap * 100) + "% of " + usd(cap, 0) : "no budget set") + '</span></div><div class="kv">' + usd(used) + '</div><div class="mtr" role="meter" aria-valuemin="0" aria-valuemax="' + cap + '" aria-valuenow="' + Number(used).toFixed(2) + '" aria-label="' + esc(label) + '"><span style="width:' + p + "%;background:" + col + '"></span></div><div class="ks" style="margin-top:6px">' + esc(sub) + "</div></div>";
+  return (go ? '<button class="card click" data-a="ins-box" data-s="' + go.s + '" data-pick="' + esc(go.pick.join("|")) + '" data-t="' + esc(label) + '">' : '<div class="card">') + '<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="kl">' + esc(label.toUpperCase()) + '</span><span class="ks">' + (cap > 0 ? Math.round(used / cap * 100) + "% of " + usd(cap, 0) : "no budget set") + '</span></div><div class="kv">' + usd(used) + '</div><div class="mtr" role="meter" aria-valuemin="0" aria-valuemax="' + cap + '" aria-valuenow="' + Number(used).toFixed(2) + '" aria-label="' + esc(label) + '"><span style="width:' + p + "%;background:" + col + '"></span></div><div class="ks" style="margin-top:6px">' + esc(sub) + "</div>" + (go ? '<div class="more">See the detail →</div></button>' : "</div>");
 }
 function costChart(pd) {
   if (!pd || !pd.length) return "";
@@ -692,7 +721,7 @@ function vConsole() {
   return '<div class="card con">' + head('<span class="pill on">Connected · synced ' + esc(ago(c.fetched_at)) + "</span>", right) +
     '<div class="kpis" style="margin-top:12px">' +
       kcard("Billed this period", usd(billed), "last " + (c.days || 30) + " days" + (c.workspace_id ? " · " + (c.workspace_id === "default" ? "default workspace" : c.workspace_id) : " · whole organization")) +
-      kcard("J@rd’s estimate", est ? usd(est) : "—", "from logged token counts, same period") +
+      kcard("J@rd’s estimate", est ? usd(est) : "—", "from logged token counts, same period", "", IB("ai", ["AI cost per day (USD)", "Cost by step", "Latest AI calls"])) +
       kcard("Difference", diff == null ? "—" : (diff > 0 ? "+" : "") + diff.toFixed(1) + "%", diff == null ? "no estimate yet" : Math.abs(diff) <= 10 ? "estimate is close to the bill" : diff > 0 ? "billed more than estimated: check prices or other usage" : "billed less than estimated", diff != null && Math.abs(diff) > 10 ? "bad" : diff != null ? "good" : "") +
       kcard("Tokens in / out", tok(T.i) + " / " + tok(T.o), "input incl. cache · " + n(T.s) + " web searches") + "</div>" +
     '<div class="g2" style="margin-top:14px;align-items:start"><div><div class="kl">BILLED VS ESTIMATE PER DAY (USD, LAST 14 DAYS)</div>' + fBars(pts, [["billed", "Billed (Console)", "#5B2EFF"], ["est", "J@rd estimate", "#C9BEFF"]]) + "</div>" +
@@ -722,10 +751,10 @@ function vAiUsage(noHead) {
   return (noHead ? "" : sec("AI usage & cost", d.since ? "tracked since " + day(d.since) : "tracking starts with the next AI call")) +
     vConsole() + (mg && !edit ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:14px"><span class="ks">' + (d.since ? "Tracked since " + day(d.since) : "Tracking starts with the next AI call") + '</span><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
     '<div class="kpis" style="margin-top:0">' +
-      meter("App AI this month", m.app, Number(b.app || 0), n(m.app_calls) + " AI calls from user checks, watches and alerts") +
+      meter("App AI this month", m.app, Number(b.app || 0), n(m.app_calls) + " AI calls from user checks, watches and alerts", IB("ai", ["AI cost per day (USD)", "AI calls per day", "Cost by step"])) +
       meter("Assistant this month", m.assistant, Number(b.assistant || 0), m.assistant_calls ? n(m.assistant_calls) + " assistant calls" : "The Moreeh assistant isn’t built yet") +
-      kcard("AI cost per ticket", cpt == null ? "—" : usd(cpt, 3), cpt == null ? "no tickets used since tracking began" : (cptLocal != null && cur !== "USD" ? "≈ " + cur + " " + cptLocal.toFixed(3) + " · " : "") + n(d.tickets_used) + " tickets used") +
-      kcard("Margin per ticket", margin == null ? "—" : margin + "%", tp.amount ? "at " + cur + " " + Number(tp.amount).toFixed(2) + " per ticket, AI cost only" : "set a planned ticket price to see this", margin != null && margin < 50 ? "bad" : margin != null ? "good" : "") + "</div>" +
+      kcard("AI cost per ticket", cpt == null ? "—" : usd(cpt, 3), cpt == null ? "no tickets used since tracking began" : (cptLocal != null && cur !== "USD" ? "≈ " + cur + " " + cptLocal.toFixed(3) + " · " : "") + n(d.tickets_used) + " tickets used", "", IB("ai", ["AI cost by user", "Cost by step"])) +
+      kcard("Margin per ticket", margin == null ? "—" : margin + "%", tp.amount ? "at " + cur + " " + Number(tp.amount).toFixed(2) + " per ticket, AI cost only" : "set a planned ticket price to see this", margin != null && margin < 50 ? "bad" : margin != null ? "good" : "", IB("ai", ["Cost by model", "Cost by step"])) + "</div>" +
     settings +
     '<div style="margin-top:14px">' + costChart(d.per_day) + "</div>" +
     '<div class="g2" style="margin-top:14px;align-items:start"><div class="card" style="overflow:auto"><b>Where it went</b> <span class="ks">last ' + (d.days || 30) + ' days · ' + usd(Number(per.app) + Number(per.assistant)) + ' total</span><table class="tb" style="margin-top:6px"><tr><th>What</th><th style="text-align:right">Runs</th><th style="text-align:right">Avg / run</th><th style="text-align:right">Total</th><th style="text-align:right">Tokens in / out</th><th style="text-align:right">Searches</th></tr>' +
@@ -1002,7 +1031,7 @@ function finHead(title, sub, back) {
     '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div>' + finAiChip() + "</div></div>" +
     (M.fin && !M.fin.has_real ? '<div class="card" style="margin-top:14px;background:#F4F1FE;box-shadow:none;border:1px solid #DDD3FF"><b>No real sales yet.</b> <span class="ks">Revenue, orders and payers show here as soon as Google Play billing is live. Test top-ups from the app are left out. Costs, tickets used and AI spend below are live.</span></div>' : "");
 }
-function finCard(title, page, body, sub) { return '<div class="card fc"><div class="fch"><b>' + esc(title) + "</b>" + (sub ? '<span class="ks">' + esc(sub) + "</span>" : "") + '<button class="b s" data-p="' + page + '">Open →</button></div>' + body + "</div>"; }
+function finCard(title, page, body, sub) { return '<div class="card fc fcl" data-p="' + page + '" role="link" tabindex="0" aria-label="' + esc(title) + '. Open"><div class="fch"><b>' + esc(title) + "</b>" + (sub ? '<span class="ks">' + esc(sub) + "</span>" : "") + '<span class="b s">Open →</span></div>' + body + "</div>"; }
 function costCats(c) {
   var T = c.T;
   return [["AI (Anthropic API)", T.ai, "#5B2EFF"], ["Store fees (Google Play)", T.store, "#E0457B"], ["Taxes on sales", T.tax, "#FF8A00"], ["Payment processing", T.pay, "#1E5FA8"], ["Fixed & operational", T.fixed, "#0F9D9A"], ["Marketing", T.mkt, "#1A7F3C"]];
@@ -1014,15 +1043,15 @@ function vFinance() {
   var c = finCalc(d), T = c.T, pts;
   if (page === "fin") {
     var k = [
-      ["Total Revenue", rm(T.rev), n(T.orders) + " orders"], ["Total Tickets Used", n(T.used), n(T.sold) + " sold · " + n(T.free) + " free given"],
-      ["Average Price per Ticket", rm(c.avgPrice), "ticket packs and Plus"], ["Total Cost", rm(T.cost), "AI, fees, taxes, fixed, marketing"],
-      ["Net Profit", rm(T.profit), T.profit >= 0 ? "after every cost" : "loss after every cost", T.profit >= 0 ? "good" : "bad"], ["Net Profit Margin (%)", (T.rev ? c.margin.toFixed(1) : "0.0") + "%", "net profit ÷ revenue", T.rev && c.margin < 0 ? "bad" : ""],
-      ["Cost per Ticket", rm(c.cpt), "AI alone: " + rm(c.aipt) + " per ticket used"], ["Ticket Redemption Rate (%)", c.redeem.toFixed(1) + "%", "used ÷ (sold + free) in this period"]
+      ["Total Revenue", rm(T.rev), n(T.orders) + " orders", "", { p: "fin:revcost" }], ["Total Tickets Used", n(T.used), n(T.sold) + " sold · " + n(T.free) + " free given", "", { p: "fin:volume" }],
+      ["Average Price per Ticket", rm(c.avgPrice), "ticket packs and Plus", "", { p: "fin:tiers" }], ["Total Cost", rm(T.cost), "AI, fees, taxes, fixed, marketing", "", { p: "fin:costs", sec: "c0" }],
+      ["Net Profit", rm(T.profit), T.profit >= 0 ? "after every cost" : "loss after every cost", T.profit >= 0 ? "good" : "bad", { p: "fin:bridge" }], ["Net Profit Margin (%)", (T.rev ? c.margin.toFixed(1) : "0.0") + "%", "net profit ÷ revenue", T.rev && c.margin < 0 ? "bad" : "", { p: "fin:revcost" }],
+      ["Cost per Ticket", rm(c.cpt), "AI alone: " + rm(c.aipt) + " per ticket used", "", { p: "fin:costs", sec: "c1" }], ["Ticket Redemption Rate (%)", c.redeem.toFixed(1) + "%", "used ÷ (sold + free) in this period", "", { p: "fin:volume" }]
     ];
     pts = bucket(c.rows, ["rev", "cost", "profit", "sold", "used", "free"]);
     var cats = costCats(c);
     return finHead(c.s.title) +
-      '<div class="g4" style="margin-top:16px">' + k.map(function (x) { return kcard(x[0], x[1], x[2], x[3]); }).join("") + "</div>" +
+      '<div class="g4" style="margin-top:16px">' + k.map(function (x) { return kcard(x[0], x[1], x[2], x[3], x[4]); }).join("") + "</div>" +
       '<div class="g2" style="margin-top:14px">' +
         finCard("Revenue vs. Cost Over Time", "fin:revcost", fLine(pts, [["rev", "Revenue", "#5B2EFF", 1], ["cost", "Cost", "#E0457B"]])) +
         finCard("Net Profit Bridge (Revenue to Profit Waterfall)", "fin:bridge", fWaterfall(c)) +
@@ -1182,7 +1211,7 @@ document.addEventListener("input", function (e) {
   if (e.target.id === "d-q" && M.detail) { M.detail.q = e.target.value; M.focus = "d-q"; render(); }
   if (e.target.id === "p-url" && M.pform) { var u = e.target.value.trim().replace(/\/+$/, ""); var api$ = $("p-api"); if (api$ && (!api$.value || /\/functions\/v1\/moreeh$/.test(api$.value))) api$.value = /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(u) ? u + "/functions/v1/moreeh" : api$.value; }
 });
-document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("rowl")) { openUser(e.target.dataset.id); return; } if (e.key === "Escape" && M.detail) { M.detail = null; render(); } if (e.key === "Escape" && M.dd) { M.dd = false; render(); } });
+document.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList && e.target.classList.contains("rowl")) { openUser(e.target.dataset.id); return; } if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("fcl")) { e.preventDefault(); goPage(e.target.dataset.p); return; } if (e.key === "Escape" && M.detail) { M.detail = null; render(); } if (e.key === "Escape" && M.dd) { M.dd = false; render(); } });
 document.addEventListener("click", function (e) {
   if (e.target.closest("[data-stop]") && !e.target.closest("[data-a],[data-p]")) return;
   var t = e.target.closest("[data-p],[data-a]"); if (!t) { if (M.dd) { M.dd = false; render(); } return; }
@@ -1190,6 +1219,7 @@ document.addEventListener("click", function (e) {
   var a = t.dataset.a;
   if (a === "close-detail") { if (e.target.closest("[data-stop]") && t.classList.contains("panel-bg")) return; M.detail = null; render(); }
   if (a === "kpi") openDetail(t.dataset.k, t.getAttribute("aria-label"));
+  if (a === "ins-box") openInsBox(t.dataset.s, String(t.dataset.pick || "").split("|"), t.dataset.t || "");
   if (a === "d-csv") detailCsv();
   if (a === "dd") { M.dd = !M.dd; render(); }
   if (a === "switch") switchTo(t.dataset.id);
@@ -1215,7 +1245,7 @@ document.addEventListener("click", function (e) {
   if (a === "fin-days") { M.finDays = Number(t.dataset.v); M.fin = null; render(); loadFinance(); }
   if (a === "fx-add") { readFinForm(); M.finForm.fixed.push({ name: "", amount: "" }); render(); }
   if (a === "fx-del") { readFinForm(); M.finForm.fixed.splice(Number(t.dataset.i), 1); render(); }
-  if (a === "id-csv") detCsv(Number(t.dataset.i));
+  if (a === "id-csv") detCsv(t.dataset.i);
   if (a === "id-more") { e.preventDefault(); M.idmore = M.idmore || {}; M.idmore[t.dataset.i] = 1; render(); }
   if (a === "ai-edit") { M.aiEdit = !M.aiEdit; render(); }
   if (a === "con-refresh") loadConsole(true);
