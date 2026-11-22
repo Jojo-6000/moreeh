@@ -125,6 +125,9 @@ a{color:#5B2EFF}
 @media (prefers-reduced-motion:reduce){.boot *,.boot .logo::after,.mload span{animation:none!important}}
 .connl{display:flex;align-items:center;gap:14px;margin-top:40px}.connl .mload{margin:0;height:34px}.connl .mload span{width:9px;animation-name:mlb2}
 @keyframes mlb2{0%,100%{height:9px}50%{height:32px}}
+.con{border:1px solid #E3DCFF}.conh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.conh .ks{max-width:560px;margin-top:4px}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:#EEEAFB;color:#5B4C99;vertical-align:2px}.pill.on{background:#E3F6E8;color:#1A7F3C}.pill.off{background:#FFF1DB;color:#8A5300}.pill.bad{background:#FDE7E7;color:#B3261E}
+.consteps{margin:12px 0 14px;padding-left:20px;font-size:13px;line-height:1.55;color:#3A2F6B}.consteps li{margin-bottom:6px}.con code{background:#F1EEFC;padding:1px 6px;border-radius:5px;font-size:12px}
 </style>
 </head>
 <body>
@@ -654,6 +657,49 @@ function costChart(pd) {
   }).join("");
   return '<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><b>AI cost per day (USD)</b><span class="ks"><span class="pdot" style="background:#5B2EFF"></span> App &nbsp; <span class="pdot" style="background:#E0457B"></span> Assistant &nbsp; last 14 days</span></div><svg width="100%" height="150" viewBox="0 0 ' + (pd.length * W) + ' 150" preserveAspectRatio="xMinYMid meet" role="img" aria-label="AI cost per day">' + bars + "</svg></div>";
 }
+
+/* ---------- Claude Console (billed usage & cost, via the Anthropic Admin API on the server) ---------- */
+var CTYPE = { tokens: "Tokens", web_search: "Web search", code_execution: "Code execution", session_usage: "Managed agent sessions", other: "Other" };
+function conOk() { return has("console") && role() !== "support"; }
+function conLive() { var c = M.con; return !!(c && c.connected && !c.error && c.per_day); }
+function loadConsole(refresh, days) {
+  if (!conOk()) return Promise.resolve();
+  days = days || M.insDays || 30; M.conBusy = true; if (refresh) render();
+  return api("console", { days: days, refresh: !!refresh }).then(function (j) { M.conBusy = false; M.con = j; if (j && j.error === "rate_limited") toast("Claude Console is busy. Try again in a minute."); render(); })
+    .catch(function () { M.conBusy = false; M.con = { connected: true, error: "console_error" }; render(); });
+}
+function tok(x) { x = Number(x || 0); return x >= 1e6 ? (x / 1e6).toFixed(x >= 1e7 ? 0 : 1) + "M" : x >= 1e3 ? (x / 1e3).toFixed(x >= 1e4 ? 0 : 1) + "k" : String(x); }
+function vConsole() {
+  if (!conOk()) return "";
+  var c = M.con, head = function (pill, right) { return '<div class="conh"><div><b>Billed by Claude Console</b> ' + pill + '<div class="ks">What Anthropic actually charges, straight from your Claude Console. The rest of this page is J@rd’s own estimate from token counts.</div></div>' + (right || "") + "</div>"; };
+  if (!c) return '<div class="card con">' + head('<span class="pill">Checking…</span>') + '<div class="mload" style="margin:14px 0 4px"><span></span><span></span><span></span><span></span></div></div>';
+  if (!c.connected) return '<div class="card con">' + head('<span class="pill off">Not connected</span>') +
+    '<ol class="consteps"><li><b>Create an Admin API key</b> in the Claude Console: Settings → Admin keys. Only organization admins can do this; an individual account first needs an organization (Settings → Organization).</li>' +
+    '<li><b>Add it to Supabase</b>: your J@rd project → Edge Functions → Secrets → add <code>ANTHROPIC_ADMIN_KEY</code>. Don’t paste the key into Moreeh or a chat. It’s a read-only reporting key, but it can see your whole organization’s usage.</li>' +
+    '<li><b>Come back and press Check again.</b> Data shows up within about 5 minutes of each AI call.</li></ol>' +
+    '<button class="b s" data-a="con-refresh">Check again</button></div>';
+  var right = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+    (c.workspaces && c.workspaces.length > 1 || c.workspace_id ? '<select class="in" data-a="con-ws" style="height:34px;width:auto;font-size:12px"' + (canManage() ? "" : " disabled") + '><option value="">All workspaces</option>' + (c.workspaces || []).map(function (w) { return '<option value="' + esc(w) + '"' + (w === c.workspace_id ? " selected" : "") + ">" + esc(w === "default" ? "Default workspace" : w) + "</option>"; }).join("") + "</select>" : "") +
+    '<button class="b s" data-a="con-refresh"' + (M.conBusy ? " disabled" : "") + ">" + (M.conBusy ? "Syncing…" : "↻ Refresh") + "</button></div>";
+  if (c.error) return '<div class="card con">' + head('<span class="pill bad">' + (c.error === "bad_key" ? "Key rejected" : c.error === "rate_limited" ? "Busy" : "Can’t reach Console") + "</span>", right) +
+    '<p class="ks" style="margin-top:10px">' + (c.error === "bad_key" ? "Anthropic didn’t accept <code>ANTHROPIC_ADMIN_KEY</code>. It must be an Admin API key (starts with sk-ant-admin), not the normal API key the app uses. Replace it in Supabase → Edge Functions → Secrets." : c.error === "rate_limited" ? "Anthropic asks for at most one sync a minute. Try again shortly." : "The Console didn’t answer just now (" + esc(c.detail || "") + "). Try Refresh in a minute.") + "</p></div>";
+  var ai = M.ai || {}, per = ai.period || {}, est = Number(per.app || 0) + Number(per.assistant || 0), billed = Number(c.total_usd || 0);
+  var diff = est > 0 ? (billed - est) / est * 100 : null;
+  var T = (c.models || []).reduce(function (a, m) { a.i += m.input + m.cache_read + m.cache_write; a.o += m.output; a.s += m.searches; return a; }, { i: 0, o: 0, s: 0 });
+  var estDay = {}; (ai.per_day || []).forEach(function (d) { estDay[String(d.day).slice(0, 10)] = Number(d.app) + Number(d.assistant); });
+  var pts = (c.per_day || []).slice(-14).map(function (d) { return { label: d.d.slice(5).replace("-", "/"), billed: d.usd, est: estDay[d.d] || 0 }; });
+  var models = (c.models || []).map(function (m) { return "<tr><td>" + esc(m.model) + '</td><td style="text-align:right;font-weight:700">' + usd(m.usd) + '</td><td style="text-align:right">' + tok(m.input) + '</td><td style="text-align:right">' + tok(m.cache_read) + " / " + tok(m.cache_write) + '</td><td style="text-align:right">' + tok(m.output) + '</td><td style="text-align:right">' + n(m.searches) + "</td></tr>"; }).join("");
+  return '<div class="card con">' + head('<span class="pill on">Connected · synced ' + esc(ago(c.fetched_at)) + "</span>", right) +
+    '<div class="kpis" style="margin-top:12px">' +
+      kcard("Billed this period", usd(billed), "last " + (c.days || 30) + " days" + (c.workspace_id ? " · " + (c.workspace_id === "default" ? "default workspace" : c.workspace_id) : " · whole organization")) +
+      kcard("J@rd’s estimate", est ? usd(est) : "—", "from logged token counts, same period") +
+      kcard("Difference", diff == null ? "—" : (diff > 0 ? "+" : "") + diff.toFixed(1) + "%", diff == null ? "no estimate yet" : Math.abs(diff) <= 10 ? "estimate is close to the bill" : diff > 0 ? "billed more than estimated: check prices or other usage" : "billed less than estimated", diff != null && Math.abs(diff) > 10 ? "bad" : diff != null ? "good" : "") +
+      kcard("Tokens in / out", tok(T.i) + " / " + tok(T.o), "input incl. cache · " + n(T.s) + " web searches") + "</div>" +
+    '<div class="g2" style="margin-top:14px;align-items:start"><div><div class="kl">BILLED VS ESTIMATE PER DAY (USD, LAST 14 DAYS)</div>' + fBars(pts, [["billed", "Billed (Console)", "#5B2EFF"], ["est", "J@rd estimate", "#C9BEFF"]]) + "</div>" +
+      "<div><div class=\"kl\">BY COST TYPE</div>" + fH((c.types || []).map(function (t) { return [CTYPE[t.type] || t.type, t.usd]; }), function (v) { return usd(v); }) + "</div></div>" +
+    '<div style="overflow:auto;margin-top:12px"><table class="tb"><tr><th>Model</th><th style="text-align:right">Billed</th><th style="text-align:right">Input</th><th style="text-align:right">Cache read / write</th><th style="text-align:right">Output</th><th style="text-align:right">Searches</th></tr>' + (models || '<tr><td colspan="6" class="sub">No usage in this period.</td></tr>') + "</table></div>" +
+    (!c.workspace_id && (c.workspaces || []).length > 1 ? '<p class="ks" style="margin:10px 0 0">This includes every workspace in your organization. Pick J@rd’s workspace above so other projects don’t count as J@rd’s cost.</p>' : "") + "</div>";
+}
 function vAiUsage(noHead) {
   var d = M.ai;
   if (!d) return (noHead ? "" : sec("AI usage & cost")) + '<p class="sub">Loading…</p>';
@@ -674,7 +720,7 @@ function vAiUsage(noHead) {
   }).join("");
   var top = (d.top_users || []).map(function (u) { return '<div class="kvl"><a href="#" data-a="open-user" data-id="' + esc(u.user_id) + '">' + esc(u.email || String(u.user_id).slice(0, 8)) + "</a><b>" + usd(u.cost) + ' <span class="ks" style="font-weight:600">· ' + n(u.runs) + " checks</span></b></div>"; }).join("");
   return (noHead ? "" : sec("AI usage & cost", d.since ? "tracked since " + day(d.since) : "tracking starts with the next AI call")) +
-    (mg && !edit ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span class="ks">' + (d.since ? "Tracked since " + day(d.since) : "Tracking starts with the next AI call") + '</span><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
+    vConsole() + (mg && !edit ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:14px"><span class="ks">' + (d.since ? "Tracked since " + day(d.since) : "Tracking starts with the next AI call") + '</span><button class="b s" data-a="ai-edit">Budgets &amp; ticket price</button></div>' : "") +
     '<div class="kpis" style="margin-top:0">' +
       meter("App AI this month", m.app, Number(b.app || 0), n(m.app_calls) + " AI calls from user checks, watches and alerts") +
       meter("Assistant this month", m.assistant, Number(b.assistant || 0), m.assistant_calls ? n(m.assistant_calls) + " assistant calls" : "The Moreeh assistant isn’t built yet") +
@@ -688,7 +734,7 @@ function vAiUsage(noHead) {
       '<div class="kl" style="margin-top:14px">PRICES USED (USD PER MILLION TOKENS)</div>' + (d.prices || []).map(function (p) { return '<div class="kvl"><span>' + esc(p.model) + "</span><b>" + usd(p.input_per_mtok) + " in · " + usd(p.output_per_mtok) + " out</b></div>"; }).join("") +
       '<div class="ks" style="margin-top:6px">Web search ' + usd(((d.prices || [])[0] || {}).search_per_k || 10, 0) + " per 1,000. Estimates: your Anthropic invoice is the final word.</div></div></div>";
 }
-function loadAi() { return api("ai-usage", { days: M.insDays || 30 }).then(function (j) { M.ai = j; render(); }).catch(function () {}); }
+function loadAi() { if (conOk()) loadConsole(); return api("ai-usage", { days: M.insDays || 30 }).then(function (j) { M.ai = j; render(); }).catch(function () {}); }
 function saveAi() {
   var v = function (id) { var e = $(id); return e ? e.value : ""; };
   api("ai-settings", { budget_app: v("ai-ba"), budget_assistant: v("ai-bs"), ticket_price: { amount: v("ai-tp"), currency: v("ai-tc") } })
@@ -871,10 +917,12 @@ var CHAN = { fpx: "FPX online banking", card: "Card", tng: "Touch ’n Go", grab
 var AIK = { quick: "Quick checks", deep: "Deep checks", watch: "Wishlist watches", price_alert: "Plus price alerts", econ: "Economy refresh" };
 function rm(x, d) { x = Number(x || 0); var neg = x < 0; x = Math.abs(x); return (neg ? "−" : "") + "RM " + x.toLocaleString(undefined, { minimumFractionDigits: d == null ? 2 : d, maximumFractionDigits: d == null ? 2 : d }); }
 function finSet() { var s = (M.fin && M.fin.settings) || {}; return { fx: Number(s.fx_usd) || 4.1, sf: Number(s.store_fee_pct == null ? 15 : s.store_fee_pct), tax: Number(s.tax_pct == null ? 8 : s.tax_pct), pf: Number(s.payment_fee_pct || 0), fixed: Array.isArray(s.fixed) ? s.fixed : [], mkt: Number(s.marketing_monthly || 0), bRev: Number(s.budget_revenue_monthly || 0), bCost: Number(s.budget_cost_monthly || 0), title: s.title || FIN_TITLES[0] }; }
+function finAiSrc() { var c = M.finCon; return c && c.connected && !c.error && c.per_day && M.finAiSrc !== "app" ? "console" : "app"; }
 function finCalc(d) {
   var s = finSet(), days = d.days || [], N = days.length || 1, fixedM = s.fixed.reduce(function (a, f) { return a + Number(f.amount || 0); }, 0);
+  var src = finAiSrc(), bill = {}; if (src === "console") (M.finCon.per_day || []).forEach(function (b) { bill[b.d] = Number(b.usd); });
   var rows = days.map(function (x) {
-    var rev = Number(x.revenue), tax = rev * s.tax / (100 + s.tax), net = rev - tax, store = net * s.sf / 100, pay = net * s.pf / 100, ai = Number(x.ai_usd) * s.fx, fixed = fixedM / 30.4, mkt = s.mkt / 30.4;
+    var rev = Number(x.revenue), tax = rev * s.tax / (100 + s.tax), net = rev - tax, store = net * s.sf / 100, pay = net * s.pf / 100, ai = (src === "console" ? (bill[String(x.d).slice(0, 10)] || 0) : Number(x.ai_usd)) * s.fx, fixed = fixedM / 30.4, mkt = s.mkt / 30.4;
     var cost = tax + store + pay + ai + fixed + mkt;
     return { d: x.d, rev: rev, tax: tax, store: store, pay: pay, ai: ai, fixed: fixed, mkt: mkt, cost: cost, profit: rev - cost, sold: Number(x.sold), free: Number(x.free), used: Number(x.used), orders: Number(x.orders) };
   });
@@ -943,10 +991,15 @@ function fH(rows, fmt, col) {
   var mx = Math.max.apply(null, rows.map(function (r) { return Math.abs(r[1]); }).concat([1e-9]));
   return rows.map(function (r) { return '<div class="hb"><span class="hbl" title="' + esc(r[0]) + '">' + esc(r[0]) + '</span><span class="hbt"><span style="width:' + Math.max(1.5, Math.abs(r[1]) / mx * 100) + "%;background:" + (r[2] || col || "#5B2EFF") + '"></span></span><b>' + (fmt ? fmt(r[1]) : n(r[1])) + "</b></div>"; }).join("");
 }
+function finAiChip() {
+  var c = M.finCon; if (!c || !c.connected || c.error || !c.per_day) return "";
+  var src = finAiSrc();
+  return '<div class="seg" title="Where the AI cost in this P&amp;L comes from"><button class="b' + (src === "console" ? " on" : "") + '" data-a="fin-ai" data-v="console">AI: Console billed</button><button class="b' + (src === "app" ? " on" : "") + '" data-a="fin-ai" data-v="app">AI: J@rd estimate</button></div>';
+}
 function finHead(title, sub, back) {
   var days = M.finDays || 30, demo = M.finDemo !== false;
   return '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div>' + (back ? '<button class="b s" data-p="fin">← Finance overview</button>' : "") + '<h1 class="h"' + (back ? ' style="margin-top:10px"' : "") + ">" + esc(title) + '</h1><div class="sub">' + esc(proj().name) + " · " + esc(sub || "last " + (days === 365 ? "12 months" : days + " days")) + ' · all amounts in RM</div></div>' +
-    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div><label class="chk" style="height:36px;font-size:12px;font-weight:700"><input type="checkbox" data-a="fin-demo"' + (demo ? " checked" : "") + "> Include demo top-ups</label></div></div>" +
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div><label class="chk" style="height:36px;font-size:12px;font-weight:700"><input type="checkbox" data-a="fin-demo"' + (demo ? " checked" : "") + "> Include demo top-ups</label>" + finAiChip() + "</div></div>" +
     (M.fin && !M.fin.has_real ? '<div class="card" style="margin-top:14px;background:#FFF6E5;box-shadow:none;border:1px solid #FFD58A"><b>Payments aren’t live yet.</b> <span class="ks" style="color:#7A4400">Revenue here comes from demo top-ups at list price, so you can see how the dashboard works. Real Google Play sales will show up automatically once billing is connected.</span></div>' : "");
 }
 function finCard(title, page, body, sub) { return '<div class="card fc"><div class="fch"><b>' + esc(title) + "</b>" + (sub ? '<span class="ks">' + esc(sub) + "</span>" : "") + '<button class="b s" data-p="' + page + '">Open →</button></div>' + body + "</div>"; }
@@ -1052,6 +1105,7 @@ function saveFin() {
 }
 function loadFinance() {
   var days = M.finDays || 30, demo = M.finDemo !== false;
+  if (conOk()) api("console", { days: days }).then(function (j) { if ((M.finDays || 30) === days) { M.finCon = j; render(); } }).catch(function () {});
   return api("finance", { days: days, demo: demo }).then(function (j) { if ((M.finDays || 30) === days && (M.finDemo !== false) === demo) { M.fin = j; render(); } }).catch(function (e) { authFail(e) || toast(e && e.error === "not_allowed" ? "Finance is for owners and admins." : "Couldn’t load finance."); });
 }
 
@@ -1119,6 +1173,10 @@ document.addEventListener("submit", function (e) {
   if (f.id === "f-reply") sendReply((e.submitter && e.submitter.dataset.v) || "waiting");
   if (f.id === "f-proj") saveProject();
 });
+document.addEventListener("change", function (e) {
+  var t = e.target; if (!t || !t.dataset || t.dataset.a !== "con-ws") return;
+  api("console-settings", { workspace_id: t.value }).then(function () { M.con = null; M.finCon = null; render(); loadConsole(true); if (M.fin) loadFinance(); toast("Workspace saved."); }).catch(function () { toast("Couldn’t save the workspace."); });
+});
 document.addEventListener("input", function (e) {
   if (e.target.classList && e.target.classList.contains("idq")) { M.idq = M.idq || {}; M.idq[e.target.dataset.i] = e.target.value; var i0 = e.target.dataset.i; render(); var el = document.querySelector('.idq[data-i="' + i0 + '"]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } return; }
   if (e.target.id === "d-q" && M.detail) { M.detail.q = e.target.value; M.focus = "d-q"; render(); }
@@ -1161,6 +1219,8 @@ document.addEventListener("click", function (e) {
   if (a === "id-csv") detCsv(Number(t.dataset.i));
   if (a === "id-more") { e.preventDefault(); M.idmore = M.idmore || {}; M.idmore[t.dataset.i] = 1; render(); }
   if (a === "ai-edit") { M.aiEdit = !M.aiEdit; render(); }
+  if (a === "con-refresh") loadConsole(true);
+  if (a === "fin-ai") { M.finAiSrc = t.dataset.v; render(); }
   if (a === "uf") { M.uf = t.dataset.v; M.uq = ($("u-q") || {}).value || M.uq || ""; loadUsers(); }
   if (a === "open-user") { e.preventDefault(); M.detail = null; openUser(t.dataset.id); }
   if (a === "close-user") { M.usel = null; M.udata = null; if (!M.users) loadUsers(); else render(); }
