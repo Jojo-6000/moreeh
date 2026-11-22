@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Moreeh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#F4F2FB;color:#1A0B5C;font-family:Sora,system-ui,sans-serif;font-size:14px}
+button,input,select{font:inherit;color:inherit}
+.app{display:flex;min-height:100vh}
+.side{width:220px;background:#1A0B5C;color:#fff;padding:22px 14px;flex-shrink:0;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:8px;padding:0 8px}.brand span{width:30px;height:30px;border-radius:9px;background:#D4FF3A;color:#1A0B5C;display:flex;align-items:center;justify-content:center;font-weight:800}
+.appsw{margin:18px 4px 16px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);font-size:12.5px;display:flex;gap:8px}.appsw b span{color:#D4FF3A}
+.nav{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:12px;font-size:13px;color:#C9BEFF;font-weight:600;background:none;border:0;width:100%;text-align:left;cursor:pointer}
+.nav:hover{background:rgba(255,255,255,.06)}.nav.on{background:#5B2EFF;color:#fff}.nav[disabled]{opacity:.45;cursor:default}.nav small{margin-left:auto;font-size:10px;opacity:.8}
+.nav i{font-style:normal;margin-left:auto;font-size:11px;background:#FFB547;color:#1A0B5C;border-radius:9px;padding:1px 7px;font-weight:800}
+.who{margin-top:auto;display:flex;align-items:center;gap:9px;padding:0 8px;font-size:12px}.who span{width:30px;height:30px;border-radius:15px;background:#5B2EFF;display:flex;align-items:center;justify-content:center;font-weight:800}
+.main{flex:1;padding:24px 28px;min-width:0}
+.h{font-size:24px;font-weight:800;letter-spacing:-.03em;margin:0}
+.sub{font-size:12.5px;color:#7A6FAE}
+.card{background:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 1px 0 #E6E1F7}
+.kpis{display:flex;gap:14px;margin-top:20px;flex-wrap:wrap}.kpis .card{flex:1;min-width:140px}
+.kl{font-size:11px;font-weight:700;color:#7A6FAE;letter-spacing:.04em}.kv{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px}.ks{font-size:11.5px;color:#7A6FAE;margin-top:2px}
+.tb{width:100%;border-collapse:collapse;font-size:12.5px}.tb th{text-align:left;font-size:11px;color:#7A6FAE;font-weight:700;padding:8px 10px;border-bottom:1px solid #ECE8FA}.tb td{padding:10px 8px;border-bottom:1px solid #F2EFFB;white-space:nowrap}
+.tag{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700}
+.live{background:#E4F7D0;color:#1A7F3C}.off{background:#FDE2DF;color:#B3261E}.done{background:#EEE;color:#666}
+.b{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:18px;font-size:12.5px;font-weight:700;background:#fff;border:1px solid #DDD6F5;cursor:pointer}
+.b.p{background:#5B2EFF;color:#fff;border-color:#5B2EFF}.b.l{background:#D4FF3A;border-color:#D4FF3A}.b.r{color:#B3261E;border-color:#F0C9C5}.b.s{height:28px;padding:0 10px;font-size:11.5px}
+.b[disabled]{opacity:.5;cursor:default}
+.in{height:38px;border-radius:12px;border:1px solid #DDD6F5;background:#fff;padding:0 12px;width:100%}
+.in:focus{outline:2px solid #5B2EFF;outline-offset:1px}
+.lab{display:block;font-size:11px;font-weight:700;color:#7A6FAE;margin:12px 0 5px}
+.seg{display:flex;gap:6px}.seg .b.on{background:#5B2EFF;color:#fff;border-color:#5B2EFF}
+.chk{display:flex;align-items:center;gap:10px;height:40px;border:1px solid #DDD6F5;border-radius:12px;padding:0 12px;background:#fff}
+.chk input[type=number]{margin-left:auto;width:90px;height:30px;border:1px solid #ECE8FA;border-radius:8px;padding:0 8px;text-align:right}
+.row2{display:flex;gap:10px}.row2>*{flex:1}
+.bar{width:90px;height:6px;border-radius:3px;background:#ECE8FA}.bar div{height:6px;border-radius:3px;background:#5B2EFF}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1A0B5C;color:#fff;padding:12px 18px;border-radius:14px;font-size:13px;z-index:9}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1A0B5C}
+.login .card{width:360px;padding:28px}
+.codes{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#F4F2FB;border-radius:12px;padding:12px;max-height:180px;overflow:auto;white-space:pre}
+.err{color:#B3261E;font-size:12.5px;margin-top:10px}
+@media (max-width:900px){.side{display:none}.main{padding:16px}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var CFG = {
+  supabaseUrl: "https://joiqrksolnlkhkedsqly.supabase.co",
+  supabaseKey: "sb_publishable_YKx3A2YLokGQkg5sWPF9-Q_qLt-s-t6",   // publishable key: safe in a web page
+  api: "https://joiqrksolnlkhkedsqly.supabase.co/functions/v1/jard-ai/admin"
+};
+var sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+var M = { page: "overview", me: null, ov: null, coupons: null, audit: null, form: { kind: "shared", gTickets: true, tickets: 20, gPlus: false, plus_days: 30, gStorage: false, storage_gb: 5, storage_days: 30, per_user: 1, count: 100 }, created: null, busy: false, err: "" };
+var $ = function (id) { return document.getElementById(id); };
+function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function n(x) { return Number(x || 0).toLocaleString(); }
+function day(iso) { return iso ? new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—"; }
+function toast(m) { var t = document.createElement("div"); t.className = "toast"; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200); }
+
+function api(action, extra) {
+  return sb.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session; if (!s) throw { error: "signed_out" };
+    return fetch(CFG.api, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.access_token }, body: JSON.stringify(Object.assign({ action: action }, extra || {})) });
+  }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw j; return j; }); });
+}
+
+/* ---------- login ---------- */
+function vLogin() {
+  return '<div class="login"><form class="card" id="f-login"><div class="brand" style="padding:0"><span>M</span><b style="font-size:18px">Moreeh</b></div>' +
+    '<p class="sub" style="margin:10px 0 6px">Admin sign-in. Use your J@rd account; only admins get in.</p>' +
+    '<label class="lab" for="em">EMAIL</label><input class="in" id="em" type="email" autocomplete="username" required>' +
+    '<label class="lab" for="pw">PASSWORD</label><input class="in" id="pw" type="password" autocomplete="current-password" required>' +
+    (M.err ? '<div class="err">' + esc(M.err) + "</div>" : "") +
+    '<button class="b p" style="width:100%;margin-top:16px;height:42px"' + (M.busy ? " disabled" : "") + ">" + (M.busy ? "Signing in…" : "Sign in") + "</button></form></div>";
+}
+
+/* ---------- shell ---------- */
+var NAV = [["overview", "▦", "Overview"], ["coupons", "◆", "Coupons"], ["audit", "≡", "Audit log"], ["users", "◉", "Users", 1], ["safety", "⚑", "Safety review", 1], ["support", "✉", "Support", 1]];
+function shell(body) {
+  var nav = NAV.map(function (x) {
+    var badge = x[0] === "safety" && M.ov && M.ov.safety_holds ? "<i>" + M.ov.safety_holds + "</i>" : "";
+    return '<button class="nav' + (M.page === x[0] ? " on" : "") + '" ' + (x[3] ? "disabled" : 'data-p="' + x[0] + '"') + '><span style="width:16px;text-align:center">' + x[1] + "</span>" + x[2] + (x[3] ? "<small>soon</small>" : badge) + "</button>";
+  }).join("");
+  var em = (M.me && M.me.email) || "";
+  return '<div class="app"><aside class="side"><div class="brand"><span>M</span><b style="font-size:16px">Moreeh</b></div>' +
+    '<div class="appsw"><b>J<span>@</span>rd</b><span style="color:#9C90D6">· production</span></div>' +
+    '<nav style="display:flex;flex-direction:column;gap:2px">' + nav + "</nav>" +
+    '<div class="who"><span>' + esc(em.charAt(0).toUpperCase()) + '</span><div><b>' + esc(em) + '</b><div style="color:#9C90D6;font-size:11px">' + esc(M.me && M.me.role) + ' · <a href="#" data-a="logout" style="color:#D4FF3A">Sign out</a></div></div></div></aside>' +
+    '<main class="main">' + body + "</main></div>";
+}
+
+/* ---------- overview ---------- */
+function vOverview() {
+  var o = M.ov;
+  if (!o) return '<h1 class="h">Overview</h1><p class="sub">Loading…</p>';
+  var pd = o.per_day || [], mx = Math.max.apply(null, pd.map(function (d) { return d.used; }).concat([1]));
+  var W = 40, H = 150;
+  var bars = pd.map(function (d, i) { var h = Math.max(2, d.used / mx * H); return '<rect x="' + (i * W) + '" y="' + (H - h + 14) + '" width="26" height="' + h + '" rx="6" fill="' + (i === pd.length - 1 ? "#5B2EFF" : "#C9BEFF") + '"><title>' + d.day + ": " + d.used + '</title></rect><text x="' + (i * W + 13) + '" y="' + (H + 30) + '" font-size="10" fill="#7A6FAE" text-anchor="middle">' + String(d.day).slice(8) + "</text>" + (d.used ? '<text x="' + (i * W + 13) + '" y="' + (H - h + 9) + '" font-size="10" font-weight="700" fill="#5B2EFF" text-anchor="middle">' + d.used + "</text>" : ""); }).join("");
+  function k(l, v, s, c) { return '<div class="card"><div class="kl">' + l + '</div><div class="kv" style="color:' + (c || "#1A0B5C") + '">' + v + '</div><div class="ks">' + s + "</div></div>"; }
+  return '<div style="display:flex;justify-content:space-between;align-items:center"><div><h1 class="h">Hello' + (M.me && M.me.email ? ", " + esc(M.me.email.split("@")[0]) : "") + '</h1><div class="sub">J@rd · last 7 days unless noted</div></div><button class="b l" data-p="coupons">+ New coupon</button></div>' +
+    '<div class="kpis">' + k("USERS", n(o.users), "+" + n(o.new_users) + " new this week") + k("ACTIVE USERS", n(o.active_users), "used a ticket this week") + k("TICKETS USED", n(o.tickets_used), n(o.tickets_today) + " today (refunds excluded)") +
+    k("J@RD PLUS", n(o.plus_users), "active plans") + k("CODES REDEEMED", n(o.redemptions), "this week") +
+    k("SAFETY", n(o.safety_holds), n(o.safety_events) + " refused photos this week", o.safety_holds ? "#B3261E" : "#1A7F3C") + "</div>" +
+    '<div class="card" style="margin-top:14px"><div style="display:flex;justify-content:space-between"><b>Tickets used per day</b><span class="ks">last 14 days</span></div>' +
+    '<svg width="100%" height="190" viewBox="0 0 ' + (pd.length * W) + ' 190" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Tickets used per day">' + bars + "</svg></div>" +
+    (o.safety_holds ? '<div class="card" style="margin-top:14px;border-left:4px solid #B3261E"><b>' + o.safety_holds + ' child-safety hold' + (o.safety_holds > 1 ? "s" : "") + ' waiting for review.</b><div class="ks">The review page is coming next. Until then, set reviewed_at on the row in the safety_events table in Supabase.</div></div>' : "");
+}
+
+/* ---------- coupons ---------- */
+function reward(c) {
+  var p = [];
+  if (c.tickets) p.push("+" + c.tickets + " ◆");
+  if (c.plus_days) p.push(c.plus_days + " d Plus");
+  if (c.storage_gb) p.push(c.storage_gb + " GB · " + c.storage_days + " d");
+  return p.join(" + ");
+}
+function rules(c) {
+  var p = [c.kind === "batch" ? "single-use codes" : c.per_user === 1 ? "1 / account" : c.per_user + " / account"];
+  if (c.new_users_days) p.push("new ≤ " + c.new_users_days + " d");
+  return p.join(" · ");
+}
+function status(c) {
+  if (!c.active) return '<span class="tag off">Switched off</span>';
+  if (c.ends_at && Date.parse(c.ends_at) < Date.now()) return '<span class="tag done">Expired</span>';
+  var cap = c.kind === "batch" ? c.codes : c.max_uses;
+  if (cap && c.uses >= cap) return '<span class="tag done">Used up</span>';
+  return '<span class="tag live">Live</span>';
+}
+function vCoupons() {
+  var list = M.coupons;
+  var rows = !list ? '<tr><td colspan="7" class="sub">Loading…</td></tr>' : !list.length ? '<tr><td colspan="7" class="sub">No coupons yet. Create one on the right.</td></tr>' : list.map(function (c) {
+    var cap = c.kind === "batch" ? c.codes : c.max_uses, pct = cap ? Math.min(100, c.uses / cap * 100) : 0;
+    return "<tr><td><b>" + esc(c.kind === "shared" ? c.label : "JARD-····") + "</b>" + (c.kind === "batch" ? ' <span class="ks">×' + n(c.codes) + "</span>" : "") + "</td><td>" + esc(c.campaign || "—") + "</td><td>" + esc(reward(c)) + "</td><td>" + esc(rules(c)) + "</td>" +
+      '<td>' + (cap ? '<div class="bar"><div style="width:' + pct + '%"></div></div>' : "") + '<span class="ks">' + n(c.uses) + " / " + (cap ? n(cap) : "∞") + "</span></td><td>" + (c.ends_at ? day(c.ends_at) : "—") + "</td><td>" + status(c) +
+      ' <button class="b s' + (c.active ? " r" : "") + '" data-a="toggle" data-id="' + c.id + '" data-on="' + (c.active ? 0 : 1) + '">' + (c.active ? "Switch off" : "Switch on") + "</button></td></tr>";
+  }).join("");
+  var tot = (list || []).reduce(function (s, c) { return s + c.uses; }, 0), tix = (list || []).reduce(function (s, c) { return s + c.uses * c.tickets; }, 0);
+  return '<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:520px">' +
+    '<h1 class="h">Coupons</h1><div class="kpis"><div class="card"><div class="kl">REDEEMED (ALL TIME)</div><div class="kv">' + n(tot) + '</div></div><div class="card"><div class="kl">TICKETS GIVEN</div><div class="kv">' + n(tix) + ' ◆</div></div><div class="card"><div class="kl">COUPONS</div><div class="kv">' + n((list || []).length) + "</div></div></div>" +
+    '<div class="card" style="margin-top:14px;overflow:auto"><table class="tb"><tr><th>Code</th><th>Campaign</th><th>Gives</th><th>Rules</th><th>Used</th><th>Ends</th><th></th></tr>' + rows + "</table></div></div>" +
+    vNewCoupon() + "</div>";
+}
+function vNewCoupon() {
+  var f = M.form, shared = f.kind === "shared";
+  if (M.created) {
+    var c = M.created;
+    return '<div class="card" style="width:350px;padding:20px"><b style="font-size:16px">Coupon created</b><p class="sub">' + (c.codes.length > 1 ? n(c.codes.length) + " codes. <b>Download them now:</b> J@rd only stores them scrambled, so they can’t be shown again." : "Share this code:") + "</p>" +
+      '<div class="codes">' + esc(c.codes.slice(0, 50).join("\n")) + (c.codes.length > 50 ? "\n… and " + (c.codes.length - 50) + " more in the CSV" : "") + "</div>" +
+      '<div style="display:flex;gap:8px;margin-top:14px">' + (c.codes.length > 1 ? '<button class="b p" style="flex:1" data-a="csv">Download CSV</button>' : '<button class="b p" style="flex:1" data-a="copy">Copy code</button>') + '<button class="b" data-a="new">New coupon</button></div></div>';
+  }
+  function chk(id, on, label, inputs) { return '<label class="chk"><input type="checkbox" id="' + id + '"' + (on ? " checked" : "") + ">" + label + inputs + "</label>"; }
+  return '<form class="card" id="f-coupon" style="width:350px;padding:20px"><b style="font-size:16px">New coupon</b>' +
+    '<span class="lab">TYPE</span><div class="seg"><button type="button" class="b' + (shared ? " on" : "") + '" data-a="kind" data-k="shared">One shared code</button><button type="button" class="b' + (!shared ? " on" : "") + '" data-a="kind" data-k="batch">Batch of unique codes</button></div>' +
+    (shared ? '<label class="lab" for="c-code">CODE</label><input class="in" id="c-code" placeholder="e.g. LAUNCH50" maxlength="20" style="text-transform:uppercase;font-weight:700" value="' + esc(f.code || "") + '">'
+      : '<label class="lab" for="c-count">HOW MANY CODES</label><input class="in" id="c-count" type="number" min="1" max="5000" value="' + f.count + '">') +
+    '<span class="lab">GIVES (pick one or more)</span><div style="display:flex;flex-direction:column;gap:6px">' +
+    chk("g-t", f.gTickets, "Tickets", '<input type="number" id="c-tickets" min="1" max="10000" value="' + f.tickets + '" aria-label="Tickets">') +
+    chk("g-p", f.gPlus, "J@rd Plus (days)", '<input type="number" id="c-plus" min="1" max="3650" value="' + f.plus_days + '" aria-label="Plus days">') +
+    chk("g-s", f.gStorage, "Storage GB / days", '<input type="number" id="c-sgb" min="1" max="1000" value="' + f.storage_gb + '" style="width:60px;margin-left:auto" aria-label="GB"><input type="number" id="c-sdays" min="1" max="3650" value="' + f.storage_days + '" style="width:60px;margin-left:6px" aria-label="Days">') + "</div>" +
+    '<div class="row2"><div><label class="lab" for="c-ends">ENDS (optional)</label><input class="in" id="c-ends" type="date" value="' + esc(f.ends || "") + '"></div>' +
+    (shared ? '<div><label class="lab" for="c-max">TOTAL USES (optional)</label><input class="in" id="c-max" type="number" min="1" placeholder="no limit" value="' + esc(f.max_uses || "") + '"></div>' : "<div></div>") + "</div>" +
+    '<div class="row2"><div><label class="lab" for="c-new">NEW ACCOUNTS ONLY (days)</label><input class="in" id="c-new" type="number" min="1" placeholder="anyone" value="' + esc(f.new_users_days || "") + '"></div>' +
+    '<div><label class="lab" for="c-camp">CAMPAIGN TAG</label><input class="in" id="c-camp" maxlength="80" placeholder="e.g. Launch week" value="' + esc(f.campaign || "") + '"></div></div>' +
+    '<p class="ks" style="margin:12px 0 0">Each account can use a coupon once. Batch codes look like JARD-7KQM-X4PT (8 random characters, no 0/O or 1/I).</p>' +
+    (M.err ? '<div class="err">' + esc(M.err) + "</div>" : "") +
+    '<button class="b p" style="width:100%;margin-top:14px;height:42px"' + (M.busy ? " disabled" : "") + ">" + (M.busy ? "Creating…" : shared ? "Create code" : "Create codes") + "</button></form>";
+}
+function readForm() {
+  var f = M.form, v = function (id) { var e = $(id); return e ? e.value : ""; }, c = function (id) { var e = $(id); return !!(e && e.checked); };
+  if (!$("f-coupon")) return f;
+  Object.assign(f, { code: v("c-code"), count: v("c-count") || f.count, gTickets: c("g-t"), tickets: v("c-tickets"), gPlus: c("g-p"), plus_days: v("c-plus"), gStorage: c("g-s"), storage_gb: v("c-sgb"), storage_days: v("c-sdays"), ends: v("c-ends"), max_uses: v("c-max"), new_users_days: v("c-new"), campaign: v("c-camp") });
+  return f;
+}
+var CERR = { bad_code: "Codes must be 4–20 letters or numbers.", code_taken: "That code already exists. Pick another.", no_reward: "Pick at least one thing the code gives.", not_allowed: "Your role can’t create coupons." };
+function createCoupon() {
+  var f = readForm();
+  var body = { kind: f.kind, campaign: f.campaign, tickets: f.gTickets ? Number(f.tickets) : 0, plus_days: f.gPlus ? Number(f.plus_days) : 0,
+    storage_gb: f.gStorage ? Number(f.storage_gb) : 0, storage_days: f.gStorage ? Number(f.storage_days) : 0,
+    new_users_days: f.new_users_days ? Number(f.new_users_days) : null, ends_at: f.ends ? new Date(f.ends + "T23:59:59").toISOString() : null };
+  if (f.kind === "shared") { body.code = f.code; body.max_uses = f.max_uses ? Number(f.max_uses) : null; } else body.count = Number(f.count);
+  M.busy = true; M.err = ""; render();
+  api("coupon-create", body).then(function (j) { M.busy = false; M.created = { codes: j.codes, campaign: f.campaign }; M.form = Object.assign(M.form, { code: "", campaign: "" }); loadCoupons(); render(); })
+    .catch(function (e) { M.busy = false; M.err = CERR[e && e.error] || "Couldn’t create the coupon (" + ((e && e.error) || "error") + ")."; render(); });
+}
+function csv() {
+  var c = M.created; if (!c) return;
+  var blob = new Blob(["code,campaign\n" + c.codes.map(function (x) { return x + "," + String(c.campaign || "").replace(/[,\n]/g, " "); }).join("\n")], { type: "text/csv" });
+  var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "jard-codes-" + new Date().toISOString().slice(0, 10) + ".csv"; a.click();
+}
+
+/* ---------- audit ---------- */
+var ACT = { "coupon.create": "Created coupon", "coupon.on": "Switched coupon on", "coupon.off": "Switched coupon off" };
+function vAudit() {
+  var a = M.audit;
+  return '<h1 class="h">Audit log</h1><div class="sub">Every admin action, newest first.</div><div class="card" style="margin-top:16px"><table class="tb"><tr><th>When</th><th>Who</th><th>What</th><th>Details</th></tr>' +
+    (!a ? '<tr><td colspan="4" class="sub">Loading…</td></tr>' : !a.length ? '<tr><td colspan="4" class="sub">Nothing yet.</td></tr>' : a.map(function (x) {
+      var d = x.detail || {};
+      return "<tr><td>" + new Date(x.created_at).toLocaleString() + "</td><td>" + (x.admin_id === (M.me && M.me.id) ? "You" : esc(String(x.admin_id || "").slice(0, 8))) + "</td><td>" + esc(ACT[x.action] || x.action) + '</td><td class="ks">' + esc([d.campaign, d.codes ? d.codes + " code(s)" : "", d.tickets ? "+" + d.tickets + " ◆" : "", d.plus_days ? d.plus_days + " d Plus" : ""].filter(Boolean).join(" · ")) + "</td></tr>";
+    }).join("")) + "</table></div>";
+}
+
+/* ---------- render & events ---------- */
+function render() {
+  var r = $("root");
+  if (!M.me) { r.innerHTML = vLogin(); return; }
+  r.innerHTML = shell(M.page === "coupons" ? vCoupons() : M.page === "audit" ? vAudit() : vOverview());
+}
+function loadOverview() { return api("overview").then(function (j) { M.ov = j; render(); }).catch(function () { toast("Couldn’t load the overview."); }); }
+function loadCoupons() { return api("coupons").then(function (j) { M.coupons = j.coupons; render(); }).catch(function () { toast("Couldn’t load coupons."); }); }
+function loadAudit() { return api("audit").then(function (j) { M.audit = j.audit; render(); }).catch(function () { toast("Couldn’t load the audit log."); }); }
+function goPage(p) { M.page = p; M.err = ""; render(); if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); }
+function start() {
+  api("me").then(function (j) {
+    return sb.auth.getUser().then(function (u) { M.me = Object.assign(j, { id: u.data.user && u.data.user.id }); M.err = ""; M.busy = false; goPage("overview"); });
+  }).catch(function (e) {
+    M.me = null; M.busy = false;
+    if (e && e.error === "not_admin") { M.err = "This account isn’t a Moreeh admin."; sb.auth.signOut(); }
+    render();
+  });
+}
+document.addEventListener("submit", function (e) {
+  e.preventDefault();
+  if (e.target.id === "f-login") {
+    M.busy = true; M.err = ""; render();
+    var em = e.target.querySelector("#em"), pw = e.target.querySelector("#pw");
+    sb.auth.signInWithPassword({ email: em ? em.value.trim() : "", password: pw ? pw.value : "" }).then(function (r) {
+      if (r.error) { M.busy = false; M.err = "Wrong email or password."; render(); return; }
+      start();
+    });
+  }
+  if (e.target.id === "f-coupon") createCoupon();
+});
+document.addEventListener("click", function (e) {
+  var t = e.target.closest("[data-p],[data-a]"); if (!t) return;
+  if (t.dataset.p) { goPage(t.dataset.p); return; }
+  var a = t.dataset.a;
+  if (a === "logout") { e.preventDefault(); sb.auth.signOut().then(function () { M.me = null; render(); }); }
+  if (a === "kind") { readForm(); M.form.kind = t.dataset.k; render(); }
+  if (a === "new") { M.created = null; render(); }
+  if (a === "csv") csv();
+  if (a === "copy") { navigator.clipboard && navigator.clipboard.writeText(M.created.codes[0]); toast("Copied " + M.created.codes[0]); }
+  if (a === "toggle") {
+    t.disabled = true;
+    api("coupon-toggle", { id: t.dataset.id, active: t.dataset.on === "1" }).then(function () { toast(t.dataset.on === "1" ? "Coupon switched on." : "Coupon switched off. The code stops working now."); loadCoupons(); }).catch(function () { t.disabled = false; toast("Couldn’t change it."); });
+  }
+});
+render();
+sb.auth.getSession().then(function (r) { if (r.data && r.data.session) start(); });
+</script>
+</body>
+</html>
