@@ -997,10 +997,10 @@ function finAiChip() {
   return '<div class="seg" title="Where the AI cost in this P&amp;L comes from"><button class="b' + (src === "console" ? " on" : "") + '" data-a="fin-ai" data-v="console">AI: Console billed</button><button class="b' + (src === "app" ? " on" : "") + '" data-a="fin-ai" data-v="app">AI: J@rd estimate</button></div>';
 }
 function finHead(title, sub, back) {
-  var days = M.finDays || 30, demo = M.finDemo !== false;
+  var days = M.finDays || 30;
   return '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px"><div>' + (back ? '<button class="b s" data-p="fin">← Finance overview</button>' : "") + '<h1 class="h"' + (back ? ' style="margin-top:10px"' : "") + ">" + esc(title) + '</h1><div class="sub">' + esc(proj().name) + " · " + esc(sub || "last " + (days === 365 ? "12 months" : days + " days")) + ' · all amounts in RM</div></div>' +
-    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div><label class="chk" style="height:36px;font-size:12px;font-weight:700"><input type="checkbox" data-a="fin-demo"' + (demo ? " checked" : "") + "> Include demo top-ups</label>" + finAiChip() + "</div></div>" +
-    (M.fin && !M.fin.has_real ? '<div class="card" style="margin-top:14px;background:#FFF6E5;box-shadow:none;border:1px solid #FFD58A"><b>Payments aren’t live yet.</b> <span class="ks" style="color:#7A4400">Revenue here comes from demo top-ups at list price, so you can see how the dashboard works. Real Google Play sales will show up automatically once billing is connected.</span></div>' : "");
+    '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="seg">' + [7, 30, 90, 365].map(function (x) { return '<button class="b' + (x === days ? " on" : "") + '" data-a="fin-days" data-v="' + x + '">' + (x === 365 ? "12 months" : x + " days") + "</button>"; }).join("") + '</div>' + finAiChip() + "</div></div>" +
+    (M.fin && !M.fin.has_real ? '<div class="card" style="margin-top:14px;background:#F4F1FE;box-shadow:none;border:1px solid #DDD3FF"><b>No real sales yet.</b> <span class="ks">Revenue, orders and payers show here as soon as Google Play billing is live. Test top-ups from the app are left out. Costs, tickets used and AI spend below are live.</span></div>' : "");
 }
 function finCard(title, page, body, sub) { return '<div class="card fc"><div class="fch"><b>' + esc(title) + "</b>" + (sub ? '<span class="ks">' + esc(sub) + "</span>" : "") + '<button class="b s" data-p="' + page + '">Open →</button></div>' + body + "</div>"; }
 function costCats(c) {
@@ -1104,9 +1104,9 @@ function saveFin() {
   api("finance-settings", body).then(function (j) { if (M.fin) M.fin.settings = j.settings; M.finForm = null; toast("Finance settings saved."); goPage("fin"); }).catch(function (e) { toast(e && e.error === "not_allowed" ? "Your role can’t change finance settings." : "Couldn’t save the settings."); });
 }
 function loadFinance() {
-  var days = M.finDays || 30, demo = M.finDemo !== false;
+  var days = M.finDays || 30;
   if (conOk()) api("console", { days: days }).then(function (j) { if ((M.finDays || 30) === days) { M.finCon = j; render(); } }).catch(function () {});
-  return api("finance", { days: days, demo: demo }).then(function (j) { if ((M.finDays || 30) === days && (M.finDemo !== false) === demo) { M.fin = j; render(); } }).catch(function (e) { authFail(e) || toast(e && e.error === "not_allowed" ? "Finance is for owners and admins." : "Couldn’t load finance."); });
+  return api("finance", { days: days, demo: false }).then(function (j) { if ((M.finDays || 30) === days) { M.fin = j; render(); } }).catch(function (e) { authFail(e) || toast(e && e.error === "not_allowed" ? "Finance is for owners and admins." : "Couldn’t load finance."); });
 }
 
 /* ---------- render & loading ---------- */
@@ -1213,7 +1213,6 @@ document.addEventListener("click", function (e) {
   if (a === "ins-days") { M.insDays = Number(t.dataset.v); M.ins = null; M.ai = null; render(); loadInsights(); if (/^ins:/.test(M.page)) loadInsDetail(M.page.slice(4)); }
   if (a === "nav-tog") { M.navOpen = M.navOpen || {}; M.navOpen[t.dataset.v] = !M.navOpen[t.dataset.v]; render(); }
   if (a === "fin-days") { M.finDays = Number(t.dataset.v); M.fin = null; render(); loadFinance(); }
-  if (a === "fin-demo") { M.finDemo = t.checked; M.fin = null; render(); loadFinance(); }
   if (a === "fx-add") { readFinForm(); M.finForm.fixed.push({ name: "", amount: "" }); render(); }
   if (a === "fx-del") { readFinForm(); M.finForm.fixed.splice(Number(t.dataset.i), 1); render(); }
   if (a === "id-csv") detCsv(Number(t.dataset.i));
