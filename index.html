@@ -938,9 +938,9 @@ function sendReply(status, only) {
 }
 
 /* ---------- finance ---------- */
-var FIN = [["fin", "Overview"], ["fin:revcost", "Revenue vs. Cost Over Time"], ["fin:bridge", "Net Profit Bridge"], ["fin:volume", "Ticket Volume: Sold vs. Used"], ["fin:tiers", "Revenue & Margin by Ticket Tier"], ["fin:channels", "Sales Channel Performance"], ["fin:budget", "Budget vs. Actual"], ["fin:costs", "Cost Breakdown"], ["fin:settings", "Finance settings"]];
+var FIN = [["fin", "Overview"], ["fin:revcost", "Revenue vs. Cost Over Time"], ["fin:bridge", "Net Profit Bridge"], ["fin:volume", "Ticket Volume: Sold vs. Used"], ["fin:tiers", "Revenue & Margin by Ticket Tier"], ["fin:channels", "Sales Channel Performance"], ["fin:budget", "Budget vs. Actual"], ["fin:costs", "Cost Breakdown"], ["fin:prices", "Prices by Country"], ["fin:settings", "Finance settings"]];
 var FIN_TITLES = ["Ticket Revenue & Profitability Dashboard", "Event Ticketing & Financial Performance Overview", "Box Office Financial Summary", "Ticketing Operations & Margin Tracker", "Event P&L (Profit & Loss) Dashboard"];
-var FIN_NAV = { "fin:revcost": "Revenue vs. Cost", "fin:bridge": "Profit bridge", "fin:volume": "Sold vs. used", "fin:tiers": "By ticket tier", "fin:channels": "Sales channels", "fin:budget": "Budget vs. actual", "fin:costs": "Cost breakdown", "fin:settings": "Settings", fin: "Overview" };
+var FIN_NAV = { "fin:revcost": "Revenue vs. Cost", "fin:bridge": "Profit bridge", "fin:volume": "Sold vs. used", "fin:tiers": "By ticket tier", "fin:channels": "Sales channels", "fin:budget": "Budget vs. actual", "fin:costs": "Cost breakdown", "fin:prices": "Prices by country", "fin:settings": "Settings", fin: "Overview" };
 var TIER = { starter: "10 tickets", popular: "30 tickets", power: "80 tickets", plus: "J@rd Plus · monthly", plusyear: "J@rd Plus · yearly", st5: "+5 GB storage", st25: "+25 GB storage", st100: "+100 GB storage" };
 var CHAN = { fpx: "FPX online banking", card: "Card", tng: "Touch ’n Go", grab: "GrabPay", google_play: "Google Play", demo: "Demo top-up", unknown: "Not recorded" };
 var AIK = { quick: "Quick checks", deep: "Deep checks", watch: "Wishlist watches", price_alert: "Plus price alerts", econ: "Economy refresh" };
@@ -1039,6 +1039,7 @@ function costCats(c) {
 function vFinance() {
   var d = M.fin, page = M.page;
   if (page === "fin:settings") return vFinSettings();
+  if (page === "fin:prices") return vPrices();
   if (!d) return finHead(page === "fin" ? finSet().title : FIN.filter(function (x) { return x[0] === page; })[0][1], "", page !== "fin") + '<div class="mload"><span></span><span></span><span></span></div>';
   var c = finCalc(d), T = c.T, pts;
   if (page === "fin") {
@@ -1132,6 +1133,65 @@ function saveFin() {
   var body = { title: v("fs-title"), fx_usd: v("fs-fx"), store_fee_pct: v("fs-sf"), tax_pct: v("fs-tax"), payment_fee_pct: v("fs-pf"), marketing_monthly: v("fs-mkt"), budget_revenue_monthly: v("fs-brev"), budget_cost_monthly: v("fs-bcost"), fixed: M.finForm.fixed.filter(function (x) { return String(x.name).trim(); }) };
   api("finance-settings", body).then(function (j) { if (M.fin) M.fin.settings = j.settings; M.finForm = null; toast("Finance settings saved."); goPage("fin"); }).catch(function (e) { toast(e && e.error === "not_allowed" ? "Your role can’t change finance settings." : "Couldn’t save the settings."); });
 }
+/* ---------- prices by country (tables markets + market_prices; the app reads these) ---------- */
+var PPROD = [["starter", "10 tickets", 10], ["popular", "30 tickets", 30], ["power", "80 tickets", 80], ["plus", "Plus /mo", 30], ["plusyear", "Plus /yr", 360], ["st5", "+5 GB /mo", 0], ["st25", "+25 GB /mo", 0], ["st100", "+100 GB /mo", 0]];
+function loadPrices() { return api("prices").then(function (j) { M.prices = j; render(); }).catch(function (e) { authFail(e) || toast(e && e.error === "not_allowed" ? "Prices are for owners and admins." : "Couldn’t load prices."); }); }
+function pmap() { var o = {}; ((M.prices || {}).prices || []).forEach(function (r) { (o[r.country] = o[r.country] || {})[r.product] = Number(r.price); }); return o; }
+function lp(v, cur) { if (v == null) return '<span class="ks">—</span>'; var d = cur === "KWD" ? 3 : /^(IDR|JPY|KRW)$/.test(cur) ? 0 : 2; return esc(cur) + " " + Number(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }); }
+function vPrices() {
+  var d = M.prices, title = "Prices by Country";
+  if (!d) return finHead(title, "", true) + '<div class="mload"><span></span><span></span><span></span></div>';
+  var P = pmap(), mk = d.markets || [], s = finSet(), c = M.fin ? finCalc(M.fin) : null, aipt = c ? c.aipt : null;
+  function margin(v, m, t) { if (v == null || !t) return null; var per = v * Number(m.fx_to_myr) / t, net = per / (1 + s.tax / 100) * (1 - (s.sf + s.pf) / 100); return { per: per, net: net, m: aipt == null ? null : net - aipt }; }
+  var rows = mk.map(function (m) {
+    var pr = P[m.country] || {};
+    return '<tr><td><b>' + esc(m.name) + '</b> <span class="ks">' + esc(m.country) + " · " + esc(m.currency) + "</span></td><td>" + (m.enabled ? '<span class="tag" style="background:#E4F7EA;color:#1A7F3C">Live</span>' : '<span class="tag" style="background:#F1EEF8;color:#6B6290">Off</span>') + "</td>" +
+      PPROD.map(function (x) { return '<td style="text-align:right;white-space:nowrap">' + lp(pr[x[0]], m.currency) + "</td>"; }).join("") +
+      '<td><button class="b s" data-a="price-edit" data-c="' + esc(m.country) + '">Edit</button></td></tr>';
+  }).join("");
+  var mrows = mk.filter(function (m) { return P[m.country]; }).map(function (m) {
+    var pr = P[m.country];
+    return "<tr><td><b>" + esc(m.name) + "</b></td>" + PPROD.filter(function (x) { return x[2]; }).map(function (x) {
+      var r = margin(pr[x[0]], m, x[2]); if (!r) return '<td class="ks" style="text-align:right">—</td>';
+      var col = r.m == null ? "" : r.m >= 0 ? "#1A7F3C" : "#B3261E";
+      return '<td style="text-align:right;white-space:nowrap">' + rm(r.per) + '<div class="ks">' + (r.m == null ? "after fees " + rm(r.net) : '<span style="color:' + col + ';font-weight:700">' + (r.m >= 0 ? "+" : "") + rm(r.m) + "</span> margin") + "</div></td>";
+    }).join("") + "</tr>";
+  }).join("");
+  var ctry = ((M.fin || {}).countries || []), tot = ctry.reduce(function (a, x) { return a + Number(x.revenue); }, 0);
+  var names = {}; mk.forEach(function (m) { names[m.country] = m.name; });
+  return finHead(title, "", true) +
+    '<div class="card" style="margin-top:14px;border-left:4px solid #5B2EFF"><b>How these prices are used</b><p class="ks" style="margin:6px 0 0;line-height:1.55">The J@rd app shows each user the prices for their market and records sales at that price. Only countries marked <b>Live</b> appear in the app. When Google Play billing goes live, set the same prices in Play Console (Monetize → Products), because Google Play charges whatever is set there.</p></div>' +
+    '<div class="card" style="margin-top:14px;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b>Prices</b><button class="b l" data-a="price-new">+ Add country</button></div><table class="tb" style="margin-top:8px"><tr><th>Country</th><th>Status</th>' + PPROD.map(function (x) { return '<th style="text-align:right">' + esc(x[1]) + "</th>"; }).join("") + "<th></th></tr>" + (rows || '<tr><td colspan="11" class="ks">No countries yet.</td></tr>') + "</table></div>" +
+    (M.pedit ? vPriceForm() : "") +
+    '<div class="card" style="margin-top:14px;overflow:auto"><b>Price per ticket and margin (RM)</b><p class="ks" style="margin:4px 0 8px">Price per ticket in RM, then what’s left per ticket after ' + s.tax + "% tax, " + s.sf + "% store fee and " + s.pf + "% payment fee" + (aipt == null ? ". Open Finance once to include AI cost." : ", minus AI cost of " + rm(aipt) + " per ticket used (last " + (M.finDays || 30) + " days).") + "</p>" +
+    '<table class="tb"><tr><th>Country</th>' + PPROD.filter(function (x) { return x[2]; }).map(function (x) { return '<th style="text-align:right">' + esc(x[1]) + "</th>"; }).join("") + "</tr>" + (mrows || '<tr><td colspan="6" class="ks">Add prices to see margins.</td></tr>') + "</table></div>" +
+    (M.fin ? tbl("Revenue by country (last " + (M.finDays || 30) + " days)", ["Country", "Orders:r", "Buyers:r", "Revenue (local):r", "Revenue (RM):r", "Share:r"], ctry.map(function (x) { return [names[x.country] || x.country, n(x.orders), n(x.buyers), lp(x.revenue_local, x.currency), rm(x.revenue), tot ? (Number(x.revenue) / tot * 100).toFixed(1) + "%" : "—"]; })) : "") +
+    '<p class="ks" style="margin-top:10px">RM per unit is your own conversion rate, used to add markets together in Finance. Check it now and then.</p>';
+}
+function vPriceForm() {
+  var e = M.pedit, isNew = !!e.isNew;
+  function f(id, lab, val, attrs) { return '<label class="lab" for="' + id + '">' + lab + '</label><input class="in" id="' + id + '" value="' + esc(val == null ? "" : val) + '" ' + (attrs || "") + ">"; }
+  return '<form id="f-price" class="card" style="margin-top:14px;max-width:860px"><b style="font-size:16px">' + (isNew ? "Add a country" : "Edit " + esc(e.name)) + "</b>" +
+    '<div class="g4" style="margin-top:6px">' +
+      "<div>" + f("pr-cc", "COUNTRY CODE", e.country, 'maxlength="2" style="text-transform:uppercase" placeholder="e.g. SG"' + (isNew ? "" : " readonly")) + "</div>" +
+      "<div>" + f("pr-name", "NAME", e.name, 'maxlength="60" placeholder="e.g. Singapore"') + "</div>" +
+      "<div>" + f("pr-cur", "CURRENCY", e.currency, 'maxlength="3" style="text-transform:uppercase" placeholder="e.g. SGD"') + "</div>" +
+      "<div>" + f("pr-fx", "RM PER 1 UNIT", e.fx_to_myr, 'type="number" step="any" min="0" placeholder="e.g. 3.3"') + "</div>" +
+    "</div>" +
+    '<span class="lab">PRICES (in this country’s currency · leave empty if not sold)</span><div class="g4">' + PPROD.map(function (x) { return "<div>" + f("pr-" + x[0], x[1].toUpperCase(), e.prices[x[0]], 'type="number" step="any" min="0"') + "</div>"; }).join("") + "</div>" +
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="pr-on"' + (e.enabled ? " checked" : "") + '>Live: show these prices to users in this country</label>' +
+    '<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="b p" type="submit"' + (M.busy ? " disabled" : "") + ">Save</button>" + '<button class="b" type="button" data-a="price-cancel">Cancel</button>' + (!isNew && e.country !== "MY" ? '<button class="b r" type="button" data-a="price-del" data-c="' + esc(e.country) + '" style="margin-left:auto">Remove country</button>' : "") + "</div></form>";
+}
+function savePrice() {
+  var v = function (id) { return (($(id) || {}).value || "").trim(); }, pr = {};
+  PPROD.forEach(function (x) { pr[x[0]] = v("pr-" + x[0]); });
+  var body = { country: v("pr-cc").toUpperCase(), name: v("pr-name"), currency: v("pr-cur").toUpperCase(), fx_to_myr: v("pr-fx"), enabled: !!($("pr-on") || {}).checked, prices: pr, sort: (M.pedit && M.pedit.sort) || 100 };
+  if (!/^[A-Z]{2}$/.test(body.country)) return toast("Use a 2-letter country code, like SG.");
+  if (!/^[A-Z]{3}$/.test(body.currency)) return toast("Use a 3-letter currency code, like SGD.");
+  if (!(Number(body.fx_to_myr) > 0)) return toast("Enter how many RM one unit of this currency is worth.");
+  M.busy = true; render();
+  api("prices-save", body).then(function () { M.busy = false; M.pedit = null; toast("Prices saved for " + body.name + "."); loadPrices(); }).catch(function (e) { M.busy = false; render(); toast(e && e.error === "not_allowed" ? "Your role can’t change prices." : "Couldn’t save (" + ((e && e.error) || "error") + ")."); });
+}
 function loadFinance() {
   var days = M.finDays || 30;
   if (conOk()) api("console", { days: days }).then(function (j) { if ((M.finDays || 30) === days) { M.finCon = j; render(); } }).catch(function () {});
@@ -1160,6 +1220,7 @@ function loadAudit() { return api("audit").then(function (j) { M.audit = j.audit
 function authFail(e) { if (e && (e.error === "unauthorized" || e.error === "signed_out")) { M.conn[M.cur] = { state: "signin" }; render(); return true; } return false; }
 function goPage(p, sec) {
   if (p === "fin:settings") M.finForm = null;
+  if (p === "fin:prices") { M.pedit = null; loadPrices(); }
   M.page = p; M.err = ""; M.dd = false; render();
   var c = M.conn[M.cur];
   if (c && c.state === "ok") { if (p === "overview") loadOverview(); if (p === "coupons") loadCoupons(); if (p === "audit") loadAudit(); if (p === "insights") loadInsights(); if (/^ins:/.test(p)) { if (!M.ins) loadInsights(); else if (p === "ins:ai" && has("ai_usage")) loadAi(); M.idet = null; loadInsDetail(p.slice(4)); } if (/^fin/.test(p)) { if (!M.fin) loadFinance(); M.navOpen = M.navOpen || {}; M.navOpen.finance = true; } if (/^ins/.test(p)) { M.navOpen = M.navOpen || {}; M.navOpen.insights = true; } if (p === "users") { M.usel = null; loadUsers(); } if (p === "safety") loadSafety(); if (p === "support") loadSupport(); }
@@ -1197,6 +1258,7 @@ document.addEventListener("submit", function (e) {
   if (f.id === "f-coupon") createCoupon();
   if (f.id === "f-ai") saveAi();
   if (f.id === "f-fin") saveFin();
+  if (f.id === "f-price") savePrice();
   if (f.id === "f-uq") { M.uq = ($("u-q") || {}).value || ""; loadUsers(); }
   if (f.id === "f-note") userAction("note");
   if (f.id === "f-reply") sendReply((e.submitter && e.submitter.dataset.v) || "waiting");
@@ -1217,6 +1279,10 @@ document.addEventListener("click", function (e) {
   var t = e.target.closest("[data-p],[data-a]"); if (!t) { if (M.dd) { M.dd = false; render(); } return; }
   if (t.dataset.p) { e.preventDefault(); M.detail = null; goPage(t.dataset.p, t.dataset.sec); return; }
   var a = t.dataset.a;
+  if (a === "price-new") { M.pedit = { isNew: true, country: "", name: "", currency: "", fx_to_myr: "", enabled: false, prices: {}, sort: 100 }; render(); return; }
+  if (a === "price-edit") { var mm = ((M.prices || {}).markets || []).filter(function (x) { return x.country === t.dataset.c; })[0]; if (mm) { M.pedit = Object.assign({}, mm, { prices: pmap()[mm.country] || {} }); render(); setTimeout(function () { var el = $("f-price"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 60); } return; }
+  if (a === "price-cancel") { M.pedit = null; render(); return; }
+  if (a === "price-del") { if (!confirm("Remove " + t.dataset.c + " and its prices? Users there will see Malaysia’s prices.")) return; api("market-delete", { country: t.dataset.c }).then(function () { M.pedit = null; toast("Country removed."); loadPrices(); }).catch(function () { toast("Couldn’t remove it."); }); return; }
   if (a === "close-detail") { if (e.target.closest("[data-stop]") && t.classList.contains("panel-bg")) return; M.detail = null; render(); }
   if (a === "kpi") openDetail(t.dataset.k, t.getAttribute("aria-label"));
   if (a === "ins-box") openInsBox(t.dataset.s, String(t.dataset.pick || "").split("|"), t.dataset.t || "");
